@@ -1,4 +1,5 @@
--- this is SeaSynth, a synthesizer for the playdate.
+-- this is CS-16, a synthesizer for playdate.
+-- 
 
 import "CoreLibs/graphics"
 import "CoreLibs/ui"
@@ -23,7 +24,7 @@ pd.file.mkdir("samples")
 pd.file.mkdir("songs")
 pd.file.mkdir("temp")
 
-settings = {["dark"]=true,["playonload"]=true,["cranksens"]=4,["author"]="anonymous",["output"]=0,["stoponsample"]=true}
+settings = {["dark"]=true,["playonload"]=true,["cranksens"]=4,["author"]="anonymous",["output"]=3,["stoponsample"]=true,["stopontempo"]=true}
 crankSensList = {1,2,3,4,5,6,7,8}
 
 settings = loadSettings()
@@ -42,6 +43,8 @@ screenMode = "pattern"
 currentElem = 1
 autonote = "none"
 songAuthor = settings["author"]
+
+pd.setMenuImage(gfx.image.new("img/menu"))
 
 gfx.setImageDrawMode(gfx.kDrawModeNXOR)
 pd.display.setInverted(settings["dark"])
@@ -63,10 +66,10 @@ local autoNoteMenuItem, error = pdmenu:addOptionsMenuItem("autonote", {"none","1
   autonote = arg
 end)
 
-knobs = {Knob(55,65,8,true),Knob(150,65,21),Knob(180,65,21),Knob(210,65,21),Knob(240,65,21),Knob(146,135,21),Knob(215,135,11),Knob(255,135,11),Knob(336,135,25,true),Knob(55,205,11)}
-buttons = {Button(5,5,nil,nil,"back",true),Button(310,55,nil,nil,"toggle",true),Button(53-(fnt8x8:getTextWidth("select")/2),125,nil,nil,"select",true)}
+knobs = {Knob(55,65,8,true),Knob(150,65,21),Knob(180,65,21),Knob(210,65,21),Knob(240,65,21),Knob(215,135,11),Knob(255,135,11),Knob(336,135,25,true),Knob(55,205,11)}
+buttons = {Button(5,5,nil,nil,"back",true),Button(310,55,nil,nil,"toggle",true),Button(53-(fnt8x8:getTextWidth("select")/2),125,nil,nil,"select",true),Button(127,125,nil,nil,"play",true)}
 
-allElems = {buttons[1],knobs[1],knobs[2],knobs[3],knobs[4],knobs[5],buttons[2],buttons[3],knobs[6],knobs[7],knobs[8],knobs[9],knobs[10]}
+allElems = {buttons[1],knobs[1],knobs[2],knobs[3],knobs[4],knobs[5],buttons[2],buttons[3],buttons[4],knobs[6],knobs[7],knobs[8],knobs[9]}
 
 function drawCursor()
   gfx.setColor(gfx.kColorXOR)
@@ -198,62 +201,19 @@ function pd.update()
 
       if screenMode == "pattern" then
         pd.inputHandlers.push(pattern, true)
-        local autoNoteMenuItem, error = pdmenu:addOptionsMenuItem("autonote", {"none","1","2","4","8","16","32"}, autonote, function(arg)
-          autonote = arg
-        end)
       elseif screenMode == "instrument" then
         pd.inputHandlers.push(instrument, true)
       elseif screenMode == "song" then
         pd.inputHandlers.push(song, true)
-        local saveMenuItem, error = pdmenu:addMenuItem("save", function()
-          local startname = "newsong"
-          if songdir ~= "temp/" then
-            startname = string.split(songdir,"/")[#string.split(songdir,"/")-1]
-          end
-          keyboardScreen.open("song name:",startname,20,function(name)
-            if name ~= "_EXITED_KEYBOĀRD" then
-              buildSave(name)
-              displayInfo("saved song "..name)
-              songdir = "/songs/"..name.."/ (song)"
-            end
-          end)
-        end)
-        local loadMenuItem, error = pdmenu:addMenuItem("load", function()
-          filePicker.open(function (name)
-            if name ~= "none" then
-              pd.file.delete("temp/",true)
-              pd.file.mkdir("temp/")
-
-              loadSave(string.sub(name,1,#name-7))
-
-              screenMode = "pattern"
-              pdmenu:removeAllMenuItems()
-              crankModes = crankModesList[1]
-              pd.inputHandlers.pop()
-              pd.inputHandlers.push(pattern, true)
-              local autoNoteMenuItem, error = pdmenu:addOptionsMenuItem("autonote", {"none","1","2","4","8","16","32"}, autonote, function(arg)
-                autonote = arg
-              end)
-              songdir = name
-              displayInfo("loaded song "..string.split(name,"/")[#string.split(name,"/")-1])
-
-              if settings["playonload"] == true then
-                seq:play()
-              end
-            else
-              print("no song picked")
-            end
-          end,"song")
-        end)
-        local settingsMenuItem, error = pdmenu:addMenuItem("settings", function ()
-          settingsScreen.open()
-        end)
       end
+      applyMenuItems(screenMode)
     elseif crankMode == "tempo" then
-      if seq:isPlaying() then
+      if seq:isPlaying() and settings["stopontempo"] then
         seq:stop()
+        seq:goToStep(1)
       end
       seq:setTempo(math.max(2,math.min(64,seq:getTempo()+crank)))
+      --seq:play()
     elseif crankMode == "pattern length" then
       local newThing = stepCount+(crank*16)
       if newThing <= 128 and newThing >= 16 then
@@ -284,24 +244,6 @@ function pd.update()
           adsr[currentElem-2] = math.round(math.normalize((0.1*crank)+adsr[currentElem-2],0.0,2.0),1)
           instrument.selectedInst:setADSR(adsr[1],adsr[2],adsr[3],adsr[4])
           displayInfo(adsrNames[currentElem-2]..adsr[currentElem-2])
-        elseif currentElem == 9 then -- pan
-          local pans = {{0,1},{0.1,1},{0.2,1},{0.3,1},{0.4,1},{0.5,1},{0.6,1},{0.7,1},{0.8,1},{0.9,1},{1,1},{1,0.9},{1,0.8},{1,0.7},{1,0.6},{1,0.5},{1,0.4},{1,0.3},{1,0.2},{1,0.1},{1,0}} -- fix so this changes with volume
-          --local vol = instrument.selectedInst:getVolume()
-          --if type(vol) ~= "table" then
-            --vol = {vol,vol}
-          --end
-          print(curKnob:getCurrentClick())
-
-          local vol = {}
-          table.insert(vol,pans[curKnob:getCurrentClick()+1][1])
-          table.insert(vol,pans[curKnob:getCurrentClick()+1][2])
-          --vol[1] += crank*0.1
-          --vol[2] -= crank*0.1
-
-          printTable(vol)
-          instrument.selectedInst:setVolume(vol[1],vol[2])
-          --knobs[10]:setClicks(instrument.selectedInst:getVolume()*10)
-          displayInfo("pan: ".."L"..vol[1]..", R"..vol[2])
         elseif currentElem < 12 then
           local paramNum
           if currentElem == 10 then
@@ -427,13 +369,29 @@ function pd.crankDocked()
   crankModes = crankModesList[1]
   pd.inputHandlers.pop()
   pd.inputHandlers.push(pattern, true)
-  local autoNoteMenuItem, error = pdmenu:addOptionsMenuItem("autonote", {"none","1","2","4","8","16","32"}, autonote, function(arg)
-    autonote = arg
-  end)
+  applyMenuItems("pattern")
 end
 
 if settings["playonload"] == true then
   seq:play()
 end
 
+snd.getHeadphoneState(function(phones,mic)
+  local hp,spk = false, false
+  local text = "headphones plugged in"
+  if settings["output"] == "auto" then
+    if phones == true then
+      hp = true
+      spk = false
+      settings["output"] = 1
+    else
+      hp = false
+      spk = true
+      settings["output"] = 0
+      text = "headphones unplugged"
+    end
+    snd.setOutputsActive(hp, spk)
+    displayInfo(text)
+  end
+end)
 displayInfo("cs-16 v"..pd.metadata.version,2000)

@@ -1,7 +1,7 @@
 name=CS-16
 author=nanobot567
-description=a 16-track synthesizer/sampler for playdate.
+description=cranky synth 16: a 16-track synthesizer/sampler for playdate.
 bundleID=com.nano.cs16
-version=0.1
-buildNumber=2142
+version=1.0
+buildNumber=2293
 imagePath=SystemAssets

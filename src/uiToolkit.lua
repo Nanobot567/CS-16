@@ -114,7 +114,7 @@ function filePicker.open(callback, mode)
   if mode == "song" then
     currentPath = "/songs/"
     table.insert(dirs,"/")
-    table.insert(dirLocations, row)
+    table.insert(dirLocations, 2)
   else
     currentPath = "/"
   end
@@ -170,8 +170,6 @@ function filePicker.AButtonDown()
       filePicker.selectedFile = sample
       filePicker.close()
     end)
-  elseif filePickListContents[row] == "ą play sample" then
-    snd.sample.new("temp/"..listview:getSelectedRow()..".pda"):play()
   else
     if filePicker.mode ~= "song" or string.find(filePickListContents[row],"%/ %(song%)") then
       filePicker.selectedFile = currentPath..filePickListContents[row]
@@ -251,7 +249,6 @@ function filePicker.modifyDirContents(val)
 
   if filePicker.mode == "newsmp" and currentPath == "/" then
     table.insert(val,1,"ċ edit sample")
-    table.insert(val,1,"ą play sample")
   end
 
   return val
@@ -653,9 +650,27 @@ end
 
 settingsScreen = {}
 settingsScreen.oldUpdate = nil
+settingsScreen.updateOutputs = (function()
+  if settings["output"] < 3 then
+    settings["output"] += 1
+  else
+    settings["output"] = 0
+    snd.setOutputsActive(false, true)
+  end
+  if settings["output"] == 1 then
+    snd.setOutputsActive(true, false)
+  elseif settings["output"] == 2 then
+    snd.setOutputsActive(true, true)
+  elseif settings["output"] == 3 then
+    local state = snd.getHeadphoneState()
+    snd.setOutputsActive(state, not state)
+  end
+end)
 
 function settingsScreen.open()
   settingsScreen.updateSettings()
+
+  pd.getSystemMenu():removeAllMenuItems()
 
   pd.inputHandlers.push(settingsScreen,true)
   settingsScreen.oldUpdate = pd.update
@@ -673,6 +688,8 @@ end
 function settingsScreen.close()
   pd.inputHandlers.pop()
   pd.update = settingsScreen.oldUpdate
+
+  applyMenuItems("song")
 end
 
 function settingsScreen.downButtonDown()
@@ -687,11 +704,7 @@ function settingsScreen.leftButtonDown()
   if settingsList:getSelectedRow() == 3 then
     settings["cranksens"] = table.cycle(crankSensList, settings["cranksens"],true)
   elseif settingsList:getSelectedRow() == 5 then
-    if settings["output"] > 0 then
-      settings["output"] -= 1
-    else
-      settings["output"] = 2
-    end
+    settingsScreen.updateOutputs()
   end
   settingsScreen.updateSettings()
 end
@@ -700,11 +713,7 @@ function settingsScreen.rightButtonDown()
   if settingsList:getSelectedRow() == 3 then
     settings["cranksens"] = table.cycle(crankSensList, settings["cranksens"])
   elseif settingsList:getSelectedRow() == 5 then
-    if settings["output"] < 2 then
-      settings["output"] += 1
-    else
-      settings["output"] = 0
-    end
+    settingsScreen.updateOutputs()
   end
   settingsScreen.updateSettings()
 end
@@ -733,19 +742,11 @@ function settingsScreen.AButtonDown()
       end
     end)
   elseif row == 5 then
-    if settings["output"] < 2 then
-      settings["output"] += 1
-    else
-      settings["output"] = 0
-      snd.setOutputsActive(false, true)
-    end
-    if settings["output"] == 1 then
-      snd.setOutputsActive(true, false)
-    elseif settings["output"] == 2 then
-      snd.setOutputsActive(true, true)
-    end
+    settingsScreen.updateOutputs()
   elseif row == 6 then
     settings["stoponsample"] = not settings["stoponsample"]
+  elseif row == 7 then
+    settings["stopontempo"] = not settings["stopontempo"]
   end
   settingsScreen.updateSettings()
 end
@@ -756,8 +757,10 @@ function settingsScreen.updateSettings()
     outputText = "headset"
   elseif settings["output"] == 2 then
     outputText = "speaker, headset"
+  elseif settings["output"] == 3 then
+    outputText = "auto"
   end
-  settingsList:set({"dark mode: "..tostring(settings["dark"]),"play on load: "..tostring(settings["playonload"]),"crank speed: "..settings["cranksens"],"author: "..settings["author"],"output: "..outputText,"stop if sampling: "..tostring(settings["stoponsample"])})
+  settingsList:set({"dark mode: "..tostring(settings["dark"]),"play on load: "..tostring(settings["playonload"]),"crank speed: "..settings["cranksens"],"author: "..settings["author"],"output: "..outputText,"stop if sampling: "..tostring(settings["stoponsample"]),"tempo edit stop: "..tostring(settings["stopontempo"])})
   saveSettings()
 end
 
@@ -794,6 +797,7 @@ function sampleEditScreen.open(sample, callback)
 end
 
 function sampleEditScreen.update()
+  local sidetext = "start"
   gfx.clear()
   local crank = pd.getCrankTicks(settings["cranksens"])
 
@@ -804,7 +808,14 @@ function sampleEditScreen.update()
     sampleEditScreen.editedSample = sampleEditScreen.sample:getSubsample(sampleEditScreen.trim[1],sampleEditScreen.trim[2])
     sampleEditScreen.editedSample:play()
   end
-  gfx.drawTextAligned("start: "..sampleEditScreen.trim[1]..", end: "..sampleEditScreen.trim[2],200,0,align.center)
+
+  if sampleEditScreen.side == 2 then
+    sidetext = "end"
+  end
+
+  gfx.drawTextAligned("start: "..sampleEditScreen.trim[1]..", end: "..sampleEditScreen.trim[2],200,104,align.center)
+  gfx.drawTextAligned("selected: "..sidetext,200,120,align.center)
+  gfx.drawTextAligned("a to save, b to discard",200,210,align.center)
   fnt8x8:drawTextAligned("changing frames by "..sampleEditScreen.changeVal,200,231,align.center)
 end
 
@@ -817,11 +828,11 @@ function sampleEditScreen.leftButtonDown()
 end
 
 function sampleEditScreen.upButtonDown()
-  sampleEditScreen.changeVal += 50
+  sampleEditScreen.changeVal = math.normalize(sampleEditScreen.changeVal+50,50,2000)
 end
 
 function sampleEditScreen.downButtonDown()
-  sampleEditScreen.changeVal -= 50
+  sampleEditScreen.changeVal = math.normalize(sampleEditScreen.changeVal-50,50,2000)
 end
 
 function sampleEditScreen.close(sample)

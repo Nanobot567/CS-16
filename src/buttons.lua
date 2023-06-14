@@ -6,6 +6,8 @@ song = {}
 
 instrument.selectedInst = 0
 instrument.allMuted = false
+instrument.samplePreviewElems = {playdate.sound.track.new(), playdate.sound.sequence.new()}
+instrument.sample = playdate.sound.sample.new(5)
 
 function pattern.AButtonDown()
   if seq:isPlaying() then
@@ -58,11 +60,10 @@ function instrument.AButtonDown()
       knobs[i]:setClicks((adsr[i-1]*10))
     end
 
-    knobs[6]:setClicks(10)
-    knobs[7]:setClicks(instrumentParamTable[selRow][1]*10)
-    knobs[8]:setClicks(instrumentParamTable[selRow][2]*10)
-    knobs[9]:setClicks(instrumentTransposeTable[selRow])
-    knobs[10]:setClicks(instrument.selectedInst:getVolume()*10)
+    knobs[6]:setClicks(instrumentParamTable[selRow][1]*10)
+    knobs[7]:setClicks(instrumentParamTable[selRow][2]*10)
+    knobs[8]:setClicks(instrumentTransposeTable[selRow])
+    knobs[9]:setClicks(instrument.selectedInst:getVolume()*10)
   elseif currentElem == 1 then
     local finalListViewContents = {}
 
@@ -110,6 +111,33 @@ function instrument.AButtonDown()
         print("ugh, error... "..tostring(err))
       end
     end,mode)
+  elseif currentElem == 9 then -- fix me for samples!
+    local inst = instrument.selectedInst:copy()
+    local len = 3
+    if trackNames[selRow] == "smp" then
+      instrument.sample:load("temp/"..selRow..".pda")
+      inst:setWaveform(WAVE_SIN)
+      inst:setWaveform(instrument.sample)
+      --inst:playNote(60,nil,2)
+      len = 3
+    end
+    local trk = instrument.samplePreviewElems[1]
+    local sequ = instrument.samplePreviewElems[2]
+    sequ:stop()
+    sequ:setLoops(1,1,1)
+    --sequ:allNotesOff()
+    --trk:setInstrument(snd.synth.new(WAVE_SIN))
+    trk:setInstrument(inst)
+    trk:addNote(1,60+instrumentTransposeTable[selRow],len)
+
+    --inst:playNote(60,nil,3)
+    sequ:addTrack(trk)
+    sequ:play(function(s)
+      s:stop()
+      --instrument.samplePreviewElems = {trk, sequ}
+    end)
+    instrument.samplePreviewElems = {trk, sequ}
+    collectgarbage("collect")
   end
 end
 
@@ -177,7 +205,7 @@ function instrument.leftButtonDown()
   local selRow = listview:getSelectedRow()
   if currentElem ~= 1 and listviewContents[1] == "Ā"then
     currentElem -= 1
-  else
+  elseif listviewContents[1] ~= "Ā" then
     instrument.allMuted = not instrument.allMuted
     local newVal = instrument.allMuted
 

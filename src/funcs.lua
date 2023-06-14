@@ -259,7 +259,7 @@ end
 
 function loadSettings()
   local data = pd.datastore.read("settings")
-  if data ~= nil then
+  if data ~= nil and data["stopontempo"] ~= nil then
     return data
   end
   return settings
@@ -275,26 +275,82 @@ function string.split(inputstr,sep)
 end
 
 function wav2pda(wavfile,pdafile)
-    local fil = pd.file
-    local wav = fil.open(wavfile, fil.kFileRead)
-    local datalen = fil.getSize(wavfile) - 44
-    local pda = fil.open(pdafile, fil.kFileWrite)
-    
-    wav:seek(44)
-    pda:write("Playdate AUD\68\172\0\2") -- 44kHz 16 bit mono
-    
-    local offset = 0
-    
-    while offset < datalen do
-        local n = math.min(datalen-offset, 1024)
-        pda:write(wav:read(n))
-        offset += n
-    end
-    
-    wav:close()
-    pda:close()
+  local fil = pd.file
+  local wav = fil.open(wavfile, fil.kFileRead)
+  local datalen = fil.getSize(wavfile) - 44
+  local pda = fil.open(pdafile, fil.kFileWrite)
+  
+  wav:seek(44)
+  pda:write("Playdate AUD\68\172\0\2") -- 44kHz 16 bit mono
+  
+  local offset = 0
+  
+  while offset < datalen do
+      local n = math.min(datalen-offset, 1024)
+      pda:write(wav:read(n))
+      offset += n
+  end
+  
+  wav:close()
+  pda:close()
 end
 
 function math.normalize(n, b, t)
   return math.max(b, math.min(t, n))
+end
+
+function applyMenuItems(mode)
+  if mode == "song" then
+    local saveMenuItem, error = pdmenu:addMenuItem("save", function()
+      pdmenu:removeAllMenuItems()
+      local startname = "newsong"
+      if songdir ~= "temp/" then
+        startname = string.split(songdir,"/")[#string.split(songdir,"/")-1]
+      end
+      keyboardScreen.open("song name:",startname,20,function(name)
+        if name ~= "_EXITED_KEYBOĀRD" then
+          buildSave(name)
+          displayInfo("saved song "..name)
+          songdir = "/songs/"..name.."/ (song)"
+        end
+        applyMenuItems("song")
+      end)
+    end)
+    local loadMenuItem, error = pdmenu:addMenuItem("load", function()
+      pdmenu:removeAllMenuItems()
+      filePicker.open(function (name)
+        if name ~= "none" then
+          pd.file.delete("temp/",true)
+          pd.file.mkdir("temp/")
+
+          loadSave(string.sub(name,1,#name-7))
+
+          screenMode = "pattern"
+          pdmenu:removeAllMenuItems()
+          crankModes = crankModesList[1]
+          pd.inputHandlers.pop()
+          pd.inputHandlers.push(pattern, true)
+          local autoNoteMenuItem, error = pdmenu:addOptionsMenuItem("autonote", {"none","1","2","4","8","16","32"}, autonote, function(arg)
+            autonote = arg
+          end)
+          songdir = name
+          displayInfo("loaded song "..string.split(name,"/")[#string.split(name,"/")-1])
+
+          if settings["playonload"] == true then
+            seq:play()
+          end
+        else
+          print("no song picked")
+        end
+        applyMenuItems("song")
+      end,"song")
+    end)
+    local settingsMenuItem, error = pdmenu:addMenuItem("settings", function ()
+      settingsScreen.open()
+    end)
+  elseif mode == "pattern" then
+    local autoNoteMenuItem, error = pdmenu:addOptionsMenuItem("autonote", {"none","1","2","4","8","16","32"}, autonote, function(arg)
+      autonote = arg
+    end)
+  end
 end
