@@ -96,4 +96,4 @@ To add your own samples, follow these steps:
 	- Using FFMPEG: `ffmpeg -i input_file -c:a pcm_s16le output_file.wav` 
 	- Using Audacity: File -> Export as WAV... -> Signed 16 bit PCM
 2. compile them using `pdc` into a playdate PDX, which will convert the audio files into PDA files
-3. drag the PDAs into the `Data/user.*****.com.nano.cs16/samples/` folder on your playdate. feel free to use folders to organize your samples, pdsynth supports them
+3. drag the PDAs into the `Data/user.*****.com.nano.cs16/samples/` folder on your playdate. feel free to use folders to organize your samples, CS-16 supports them
