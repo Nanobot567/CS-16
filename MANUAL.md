@@ -61,9 +61,9 @@ Once you select a track, you will be inside the instrument editor screen. You ca
 ![](assets/modules.png)
 ![](assets/modules2.png)
 
-The `SHFT` module transposes every note in the current track. Its range is -24 to 24 semitones.
-
 By turning the `WAV` knob, you can select the waveform that your track uses, but any user imported sample selected in the `SMP` module will be replaced. You will know if a sample is selected by the line connecting the `SMP` segment to `ADSR`.
+
+The `SHFT` module transposes every note in the current track. Its range is -24 to 24 semitones.
 
 When you go to select a sample, you will arrive at a list, usually with four options within it. These options are as follows:
 
@@ -96,4 +96,4 @@ To add your own samples, follow these steps:
 	- Using FFMPEG: `ffmpeg -i input_file -c:a pcm_s16le output_file.wav` 
 	- Using Audacity: File -> Export as WAV... -> Signed 16 bit PCM
 2. compile them using `pdc` into a playdate PDX, which will convert the audio files into PDA files
-3. drag the PDAs into the `Data/user.\*\*\*\*\*.com.nano.cs16/samples/` folder on your playdate. feel free to use folders to organize your samples, pdsynth supports them
+3. drag the PDAs into the `Data/user.*****.com.nano.cs16/samples/` folder on your playdate. feel free to use folders to organize your samples, pdsynth supports them
