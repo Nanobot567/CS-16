@@ -247,7 +247,7 @@ function song.upButtonDown()
 end
 
 function song.downButtonDown()
-  fxScreen.open()
+
 end
 
 function song.rightButtonDown()

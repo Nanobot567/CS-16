@@ -300,9 +300,9 @@ function math.normalize(n, b, t)
 end
 
 function applyMenuItems(mode)
+  pdmenu:removeAllMenuItems()
   if mode == "song" then
     local saveMenuItem, error = pdmenu:addMenuItem("save", function()
-      pdmenu:removeAllMenuItems()
       local startname = "newsong"
       if songdir ~= "temp/" then
         startname = string.split(songdir,"/")[#string.split(songdir,"/")-1]
@@ -317,7 +317,6 @@ function applyMenuItems(mode)
       end)
     end)
     local loadMenuItem, error = pdmenu:addMenuItem("load", function()
-      pdmenu:removeAllMenuItems()
       filePicker.open(function (name)
         if name ~= "none" then
           pd.file.delete("temp/",true)
@@ -342,7 +341,7 @@ function applyMenuItems(mode)
         else
           print("no song picked")
         end
-        applyMenuItems("song")
+        applyMenuItems("pattern")
       end,"song")
     end)
     local settingsMenuItem, error = pdmenu:addMenuItem("settings", function ()
