@@ -3,8 +3,6 @@ gfx = pd.graphics
 snd = pd.sound
 synth = snd.synth
 
--- images
-
 noteOff = gfx.image.new("img/note_off")
 noteOn = gfx.image.new("img/note_on")
 notePlaced = gfx.image.new("img/note_placed")
@@ -21,7 +19,7 @@ WAVE_POD = snd.kWavePODigital
 WAVE_POV = snd.kWavePOVosim
 
 crankModesList = {
-  {"note status","pitch","length","velocity","track","screen"}, -- velocity?
+  {"note status","pitch","length","velocity","track","screen"},
   {"turn knob","screen"},
   {"tempo","pattern length","screen"}
 }

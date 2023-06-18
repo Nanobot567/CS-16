@@ -1,5 +1,4 @@
 -- this is CS-16, a synthesizer for playdate.
--- 
 
 import "CoreLibs/graphics"
 import "CoreLibs/ui"
@@ -38,13 +37,14 @@ tempo = 120.0
 selectedTrack = tracks[1]
 textTimer = nil
 textTimerText = ""
-screenModes = {"pattern","instrument","song"}
+screenModes = {"pattern","track","song"}
 screenMode = "pattern"
 currentElem = 1
 autonote = "none"
 songAuthor = settings["author"]
 
 pd.setMenuImage(gfx.image.new("img/menu"))
+pd.setCrankSoundsDisabled(true)
 
 gfx.setImageDrawMode(gfx.kDrawModeNXOR)
 pd.display.setInverted(settings["dark"])
@@ -201,19 +201,19 @@ function pd.update()
 
       if screenMode == "pattern" then
         pd.inputHandlers.push(pattern, true)
-      elseif screenMode == "instrument" then
+      elseif screenMode == "track" then
         pd.inputHandlers.push(instrument, true)
       elseif screenMode == "song" then
         pd.inputHandlers.push(song, true)
       end
       applyMenuItems(screenMode)
+      displayInfo("screen: "..screenMode,750)
     elseif crankMode == "tempo" then
       if seq:isPlaying() and settings["stopontempo"] then
         seq:stop()
         seq:goToStep(1)
       end
       seq:setTempo(math.max(2,math.min(64,seq:getTempo()+crank)))
-      --seq:play()
     elseif crankMode == "pattern length" then
       local newThing = stepCount+(crank*16)
       if newThing <= 128 and newThing >= 16 then
@@ -289,7 +289,7 @@ function pd.update()
     gfx.drawText(currentSeqStep,0,222)
     gfx.drawTextAligned(table.find(tracks,selectedTrack).."-"..trackNames[table.find(tracks,selectedTrack)],200,222,align.center)
 
-  elseif screenMode == "instrument" then -- at some point, maybe add a "+ track" thing?
+  elseif screenMode == "track" then -- at some point, maybe add a "+ track" thing?
     local selRow = listview:getSelectedRow()
     if listviewContents[1] ~= "Ā" then
       listview:drawInRect(0, 0, 400, 240)

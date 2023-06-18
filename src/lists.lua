@@ -50,34 +50,6 @@ function filePickList:set(t)
 end
 
 
-fxListContents = {}
-
-fxList = pd.ui.gridview.new(0, 10)
-fxList.backgroundImage = gfx.image.new(10,10,gfx.kColorWhite)
-fxList:setNumberOfRows(1)
-fxList:setCellPadding(0, 0, 5, 10)
-fxList:setContentInset(24, 24, 13, 11)
-
-function fxList:drawCell(section, row, column, selected, x, y, width, height)
-  if fxListContents[row] == ".." then
-    fxListContents[row] = "Ā"
-  end
-
-  if selected then
-    gfx.fillRoundRect(x, y, width, 20, 4)
-    gfx.setImageDrawMode(gfx.kDrawModeNXOR)
-  else
-    gfx.setImageDrawMode(gfx.kDrawModeNXOR)
-  end
-  gfx.drawText(fxListContents[row], x+4, y+2, width, height, nil, "...", align.center)
-end
-
-function fxList:set(t)
-  fxListContents = t
-  fxList:setNumberOfRows(#t)
-end
-
-
 settingsListContents = {}
 
 settingsList = pd.ui.gridview.new(0, 10)

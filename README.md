@@ -12,7 +12,7 @@ a synthesizer for playdate
 - up to 128 sequencer steps
 - sampler
 - on-device sample editor
-- song saving/loading
+- song saving/loading (with author name and timestamp included in the save)
 - very customizable
 
 ## screenshots

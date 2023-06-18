@@ -602,10 +602,10 @@ sampleEditScreen.editedSample = nil
 sampleEditScreen.callback = nil
 sampleEditScreen.changeVal = 1000
 sampleEditScreen.sampleLen = 0
-sampleEditScreen.trim = {0,0} -- change 2 to len of sample
+sampleEditScreen.trim = {0,0}
 sampleEditScreen.side = 1 -- 1 = begin, 2 = end
 
-function sampleEditScreen.open(sample, callback)
+function sampleEditScreen.open(sample, callback) -- this whole thing could look better!
   sampleEditScreen.sample = sample
   sampleEditScreen.editedSample = sample
   sampleEditScreen.callback = callback
@@ -634,7 +634,6 @@ function sampleEditScreen.update()
   if crank ~= 0 then
     sampleEditScreen.trim[sampleEditScreen.side] += sampleEditScreen.changeVal*crank
     sampleEditScreen.trim[sampleEditScreen.side] = math.normalize(sampleEditScreen.trim[sampleEditScreen.side],0,sampleEditScreen.sampleLen)
-     --printTable(sampleEditScreen.trim)
     sampleEditScreen.editedSample = sampleEditScreen.sample:getSubsample(sampleEditScreen.trim[1],sampleEditScreen.trim[2])
     sampleEditScreen.editedSample:play()
   end
@@ -649,7 +648,7 @@ function sampleEditScreen.update()
   fnt8x8:drawTextAligned("changing frames by "..sampleEditScreen.changeVal,200,231,align.center)
 end
 
-function sampleEditScreen.rightButtonDown() -- swap to crank change instead
+function sampleEditScreen.rightButtonDown()
   sampleEditScreen.side = 2
 end
 

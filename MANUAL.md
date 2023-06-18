@@ -84,6 +84,8 @@ If you have already selected a sample, however, there will be an extra option in
 
 In the `song` screen, you can view and modify your song's global options, such as the tempo and pattern length. Your song name and author name is displayed at the top.
 
+> IMPORTANT NOTE! currently, the tempo can only be changed by intervals of 7.5 because of a bug in Playdate OS. as soon as a fix is implemented, this message will be deleted. 
+
 Here you can also save and load your songs via the Playdate OS menu. In the menu, you can access and change CS-16 settings, such as dark mode, crank sensitivity, and the name used to sign your saved songs.
 
 ## other information

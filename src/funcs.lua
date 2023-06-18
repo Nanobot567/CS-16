@@ -157,7 +157,7 @@ function buildSave(name)
   -- 3 = metadata
   -- |- 1 = author
   -- -- 2 = time and date
-  --
+
   local tmp = {{{},{},{},{},{},{}},{},{}}
 
   for i, v in ipairs(tracks) do
@@ -167,7 +167,6 @@ function buildSave(name)
     tmp[1][4][i] = instrumentLegatoTable[i]
     tmp[1][5][i] = instrumentParamTable[i]
     tmp[1][6][i] = instrumentTransposeTable[i]
-    --tmp[1][7][i] = instrumentTable[i]:getVolume()
   end
 
   for i,v in ipairs(pd.file.listFiles("temp/")) do
@@ -197,8 +196,7 @@ function loadSave(name)
 
   pd.file.delete("temp/",true)
   pd.file.mkdir("temp/")
-
-  -- copy samples into temp/ folder
+ 
   print("loading song from "..name)
   local tmp = pd.datastore.read(name.."song")
 
@@ -232,7 +230,7 @@ function loadSave(name)
     tracks[i]:setMuted(false)
     instrument.allMuted = false
 
-    seq:setTempo(tmp[2][1])
+    seq:setTempo(tmp[2][1]) -- TODO: be sure to implement real world bpm changes once fix is pushed!
     stepCount = tmp[2][2]
     seq:setLoops(1,stepCount)
 
@@ -272,27 +270,6 @@ function string.split(inputstr,sep)
   end
 
   return t
-end
-
-function wav2pda(wavfile,pdafile)
-  local fil = pd.file
-  local wav = fil.open(wavfile, fil.kFileRead)
-  local datalen = fil.getSize(wavfile) - 44
-  local pda = fil.open(pdafile, fil.kFileWrite)
-  
-  wav:seek(44)
-  pda:write("Playdate AUD\68\172\0\2") -- 44kHz 16 bit mono
-  
-  local offset = 0
-  
-  while offset < datalen do
-      local n = math.min(datalen-offset, 1024)
-      pda:write(wav:read(n))
-      offset += n
-  end
-  
-  wav:close()
-  pda:close()
 end
 
 function math.normalize(n, b, t)

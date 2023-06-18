@@ -40,9 +40,6 @@ for i=1, 16 do
     instrumentParamTable[i] = {0.0,0.0}
   end
 
-  --instrumentItable[i] = snd.instrument.new()
-  --instrumentItable[i]:addVoice(instrumentTable[i])
-
   table.insert(tracks, snd.track.new())
   tracks[i]:setInstrument(instrumentTable[i])
 
