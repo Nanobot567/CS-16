@@ -67,7 +67,10 @@ The `SHFT` module transposes every note in the current track. Its range is -24 t
 
 When you go to select a sample, you will arrive at a list, usually with four options within it. These options are as follows:
 
-1. `record sample` - here you can record a sample using the microphone.
+1. `record sample` - here you can record a sample using the microphone. (ui pictured below)
+
+![](assets/record.png)
+
 2. `samples/` - this is your samples folder, containing all samples imported by the user.
 3. `songs/` - all of your saved songs are here.
 4. `temp/` - the `temp/` folder contains all of the samples in your song that has not yet been saved. This will be deleted at the end of a session.
@@ -75,6 +78,8 @@ When you go to select a sample, you will arrive at a list, usually with four opt
 Within the file picker, you can enter folders or select a file using `A`, and exit folders or exit the picker using `B`. Like all other lists, you can navigate the list using `up` and `down`. Here you can also preview `.pda` samples by pressing `right`.
 
 If you have already selected a sample, however, there will be an extra option in the list: `edit sample`. In the `edit sample` screen, you can trim your samples. Pressing `left` or `right` changes the selected side, and pressing `up` or `down` changes the interval at which you trim the sample using the crank.
+
+![](assets/sampleedit.png)
 
 > note: double and triple check your sample before you save it, when you trim it you cannot revert to the original sound.
 

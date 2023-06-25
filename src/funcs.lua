@@ -280,6 +280,7 @@ function applyMenuItems(mode)
   pdmenu:removeAllMenuItems()
   if mode == "song" then
     local saveMenuItem, error = pdmenu:addMenuItem("save", function()
+      pdmenu:removeAllMenuItems()
       local startname = "newsong"
       if songdir ~= "temp/" then
         startname = string.split(songdir,"/")[#string.split(songdir,"/")-1]
@@ -294,6 +295,7 @@ function applyMenuItems(mode)
       end)
     end)
     local loadMenuItem, error = pdmenu:addMenuItem("load", function()
+      pdmenu:removeAllMenuItems()
       filePicker.open(function (name)
         if name ~= "none" then
           pd.file.delete("temp/",true)
@@ -302,7 +304,6 @@ function applyMenuItems(mode)
           loadSave(string.sub(name,1,#name-7))
 
           screenMode = "pattern"
-          pdmenu:removeAllMenuItems()
           crankModes = crankModesList[1]
           pd.inputHandlers.pop()
           pd.inputHandlers.push(pattern, true)
@@ -315,13 +316,15 @@ function applyMenuItems(mode)
           if settings["playonload"] == true then
             seq:play()
           end
+          applyMenuItems("pattern")
         else
           print("no song picked")
+          applyMenuItems("song")
         end
-        applyMenuItems("pattern")
       end,"song")
     end)
     local settingsMenuItem, error = pdmenu:addMenuItem("settings", function ()
+      pdmenu:removeAllMenuItems()
       settingsScreen.open()
     end)
   elseif mode == "pattern" then

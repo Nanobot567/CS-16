@@ -262,6 +262,7 @@ sampleScreen.oldUpdate = nil
 sampleScreen.waiting = false
 sampleScreen.waitForButton = false
 sampleScreen.recAt = 0.15
+sampleScreen.recTimer = pd.timer.new(5000)
 
 local state = "press A to arm..."
 
@@ -272,6 +273,8 @@ function sampleScreen.open(callback)
   sampleScreen.oldUpdate = nil
   sampleScreen.waiting = false
   sampleScreen.waitForButton = false
+  sampleScreen.recTimer:reset()
+  sampleScreen.recTimer:pause()
   state = "press A to arm..."
 
 
@@ -302,6 +305,7 @@ function sampleScreen.update()
   gfx.fillRect(50,110,snd.micinput.getLevel()*300,20)
   fnt8x8:drawTextAligned(math.round(snd.micinput.getLevel(),2),200,116,align.center)
   fnt8x8:drawTextAligned("will start recording from "..snd.micinput.getSource().." at volume "..sampleScreen.recAt,200,231,align.center)
+  gfx.drawTextAligned(tostring(sampleScreen.recTimer.currentTime/1000).." / 5.0",200,20,align.center)
   pd.timer.updateTimers()
 end
 
@@ -318,6 +322,7 @@ end
 function sampleScreen.record()
   sampleScreen.recording = true
   sampleScreen.waiting = false
+  sampleScreen.recTimer:start()
   local buffer = snd.sample.new(5, snd.kFormat16bitMono)
   snd.micinput.recordToSample(buffer, function(smp)
     sampleScreen.sample = smp
@@ -331,7 +336,7 @@ function sampleScreen.record()
 
     gfx.clear()
     smp:play()
-    gfx.drawTextInRect("save?\n\na to save, b to redo, right to hear again",20,0,360,200,nil,nil,align.center)
+    gfx.drawTextInRect("save?\n\na to save, b to redo, right to hear again",20,85,360,200,nil,nil,align.center)
     pd.stop()
     ::continue::
   end)
@@ -360,6 +365,8 @@ function sampleScreen.BButtonDown()
     sampleScreen.oldUpdate = nil
     sampleScreen.waiting = false
     sampleScreen.waitForButton = false
+    sampleScreen.recTimer:reset()
+    sampleScreen.recTimer:pause()
     state = "press A to arm..."
 
     snd.micinput.startListening()
@@ -607,7 +614,7 @@ sampleEditScreen.side = 1 -- 1 = begin, 2 = end
 
 function sampleEditScreen.open(sample, callback) -- this whole thing could look better!
   sampleEditScreen.sample = sample
-  sampleEditScreen.editedSample = sample
+  sampleEditScreen.editedSample = nil
   sampleEditScreen.callback = callback
   sampleEditScreen.changeVal = 1000
   sampleEditScreen.trim = {0,0}
@@ -664,7 +671,7 @@ function sampleEditScreen.downButtonDown()
   sampleEditScreen.changeVal = math.normalize(sampleEditScreen.changeVal-50,50,2000)
 end
 
-function sampleEditScreen.close(sample)
+function sampleEditScreen.close(sample) 
   pd.inputHandlers.pop()
   pd.update = sampleEditScreen.oldUpdate
   sampleEditScreen.callback(sample)

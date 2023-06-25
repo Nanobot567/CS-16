@@ -13,9 +13,9 @@ stepCount = 32
 import "funcs"
 import "buttons"
 import "consts"
-import "synthSetup"
+import "setup"
 import "lists"
-import "uiToolkit"
+import "ui"
 
 songdir = "temp/"
 

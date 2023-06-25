@@ -111,18 +111,27 @@ function instrument.AButtonDown()
         print("ugh, error... "..tostring(err))
       end
     end,mode)
-  elseif currentElem == 9 then -- sample playing could be smoother at quicker intervals.
+  elseif currentElem == 9 then
     local trk = instrument.samplePreviewElems[1]
     local sequ = instrument.samplePreviewElems[2]
-    sequ:stop()
-    local inst = instrument.selectedInst:copy()
+    sequ:allNotesOff()
+    local inst = snd.synth.new()
     local len = 3
     if trackNames[selRow] == "smp" then
       instrument.sample:load("temp/"..selRow..".pda")
       inst:setWaveform(WAVE_SIN)
       inst:setWaveform(instrument.sample)
-      len = 3
+      len = 100
+    else
+      inst:setWaveform(waveTable[table.find(waveNames,trackNames[selRow])])
     end
+    local adsr = instrumentADSRtable[selRow] -- once fix is pushed, remove and replace with synth:copy()
+    inst:setADSR(adsr[1],adsr[2],adsr[3],adsr[4])
+    inst:setLegato(instrumentLegatoTable[selRow])
+    inst:setParameter(1,instrumentParamTable[selRow][1])
+    inst:setParameter(2,instrumentParamTable[selRow][2])
+    inst:setVolume(instrument.selectedInst:getVolume())
+
     sequ:setLoops(1,1,1)
     trk:setInstrument(inst)
     trk:addNote(1,60+instrumentTransposeTable[selRow],len)
@@ -132,7 +141,6 @@ function instrument.AButtonDown()
       s:stop()
     end)
     instrument.samplePreviewElems = {trk, sequ}
-    collectgarbage("collect")
   end
 end
 
