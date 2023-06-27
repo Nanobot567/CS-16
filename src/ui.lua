@@ -125,6 +125,7 @@ function filePicker.open(callback, mode)
 
   filePickList:set(filePicker.modifyDirContents(pd.file.listFiles(currentPath)))
   filePickList:setSelectedRow(1)
+  filePickList:scrollToRow(1)
 end
 
 function filePicker.update()
@@ -156,10 +157,13 @@ function filePicker.AButtonDown()
     currentPath = currentPath..filePickListContents[row]
     filePickList:set(filePicker.modifyDirContents(pd.file.listFiles(currentPath)))
     filePickList:setSelectedRow(1)
+    filePickList:scrollToRow(1)
   elseif filePickListContents[row] == "Ā" then
     currentPath = table.remove(dirs)
     filePickList:set(filePicker.modifyDirContents(pd.file.listFiles(currentPath)))
-    filePickList:setSelectedRow(table.remove(dirLocations))
+    local rmed = table.remove(dirLocations)
+    filePickList:setSelectedRow(rmed)
+    filePickList:scrollToRow(rmed)
   elseif filePickListContents[row] == "Ą record sample" then
     sampleScreen.open(function(sample)
       filePicker.selectedFile = sample
@@ -185,7 +189,9 @@ function filePicker.BButtonDown()
   else
     currentPath = table.remove(dirs)
     filePickList:set(filePicker.modifyDirContents(pd.file.listFiles(currentPath)))
-    filePickList:setSelectedRow(table.remove(dirLocations))
+    local rmed = table.remove(dirLocations)
+    filePickList:setSelectedRow(rmed)
+    filePickList:scrollToRow(rmed)
   end
 end
 
@@ -347,7 +353,9 @@ function sampleScreen.AButtonDown()
     pd.start()
     displayInfo("saved as "..listview:getSelectedRow()..".pda")
     sampleScreen.sample:save(songdir..listview:getSelectedRow()..".pda")
-    sampleScreen.sample:save(songdir..listview:getSelectedRow()..".wav")
+    if settings["savewavs"] == true then
+      sampleScreen.sample:save(songdir..listview:getSelectedRow()..".wav")
+    end
     sampleScreen.close()
   elseif sampleScreen.waiting == false and sampleScreen.recording == false then
     sampleScreen.waiting = true
@@ -584,6 +592,8 @@ function settingsScreen.AButtonDown()
     settings["stoponsample"] = not settings["stoponsample"]
   elseif row == 7 then
     settings["stopontempo"] = not settings["stopontempo"]
+  elseif row == 8 then
+    settings["savewavs"] = not settings["savewavs"]
   end
   settingsScreen.updateSettings()
 end
@@ -597,7 +607,7 @@ function settingsScreen.updateSettings()
   elseif settings["output"] == 3 then
     outputText = "auto"
   end
-  settingsList:set({"dark mode: "..tostring(settings["dark"]),"play on load: "..tostring(settings["playonload"]),"crank speed: "..settings["cranksens"],"author: "..settings["author"],"output: "..outputText,"stop if sampling: "..tostring(settings["stoponsample"]),"tempo edit stop: "..tostring(settings["stopontempo"])})
+  settingsList:set({"dark mode: "..tostring(settings["dark"]),"play on load: "..tostring(settings["playonload"]),"crank speed: "..settings["cranksens"],"author: "..settings["author"],"output: "..outputText,"stop if sampling: "..tostring(settings["stoponsample"]),"tempo edit stop: "..tostring(settings["stopontempo"]),"save .wav samples: "..tostring(settings["savewavs"])})
   saveSettings()
 end
 
@@ -671,7 +681,7 @@ function sampleEditScreen.downButtonDown()
   sampleEditScreen.changeVal = math.normalize(sampleEditScreen.changeVal-50,50,2000)
 end
 
-function sampleEditScreen.close(sample) 
+function sampleEditScreen.close(sample)
   pd.inputHandlers.pop()
   pd.update = sampleEditScreen.oldUpdate
   sampleEditScreen.callback(sample)
@@ -683,4 +693,33 @@ end
 
 function sampleEditScreen.AButtonDown()
   sampleEditScreen.close(sampleEditScreen.editedSample)
+end
+
+messageBox = {}
+messageBox.oldUpdate = nil
+--messageBox.message = ""
+
+function messageBox.open(message)
+  gfx.drawTextInRect(message,0,0,400,240,nil,nil,align.center)
+
+  pd.inputHandlers.push(messageBox,true)
+  messageBox.oldUpdate = pd.update
+  pd.update = messageBox.update
+end
+
+function messageBox.update()
+  
+end
+
+function messageBox.AButtonDown()
+  messageBox.close()
+end
+
+function messageBox.BButtonDown()
+  messageBox.close()
+end
+
+function messageBox.close()
+  pd.inputHandlers.pop()
+  pd.update = messageBox.oldUpdate
 end

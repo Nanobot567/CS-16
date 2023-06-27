@@ -214,7 +214,9 @@ function loadSave(name)
       instrumentTable[i]:setWaveform(WAVE_SIN)
       instrumentTable[i]:setWaveform(smp)
       smp:save("temp/"..i..".pda")
-      smp:save("temp/"..i..".wav")
+      if settings["savewavs"] == true then
+        smp:save("temp/"..i..".wav")
+      end
     end
     instrumentLegatoTable[i] = tmp[1][4][i]
     instrumentTable[i]:setLegato(instrumentLegatoTable[i])
@@ -257,7 +259,7 @@ end
 
 function loadSettings()
   local data = pd.datastore.read("settings")
-  if data ~= nil and data["stopontempo"] ~= nil then
+  if data ~= nil then
     return data
   end
   return settings

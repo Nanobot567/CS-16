@@ -95,7 +95,7 @@ Here you can also save and load your songs via the Playdate OS menu. In the menu
 
 ## other information
 
-### adding samples to CS-16
+### adding samples
 
 To add your own samples, follow these steps:
 
@@ -103,4 +103,13 @@ To add your own samples, follow these steps:
 	- Using FFMPEG: `ffmpeg -i input_file -c:a pcm_s16le output_file.wav` 
 	- Using Audacity: File -> Export as WAV... -> Signed 16 bit PCM
 2. compile them using `pdc` into a playdate PDX, which will convert the audio files into PDA files
-3. drag the PDAs into the `Data/user.*****.com.nano.cs16/samples/` folder on your playdate. feel free to use folders to organize your samples, CS-16 supports them
+3. put your playdate into data disk mode
+4. drag the PDAs into the `Data/user.*****.com.nano.cs16/samples/` folder on your playdate (feel free to use folders to organize your samples, CS-16 supports them) and eject it when finished.
+
+### sharing/managing/importing songs
+
+To manage your songs:
+
+1. put your playdate into data disk mode
+2. navigate to `Data/user.*****.com.nano.cs16/songs/`
+3. add, copy, delete, or rename your songs, then eject your playdate when you are done.

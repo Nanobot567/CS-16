@@ -10,6 +10,12 @@ import "CoreLibs/keyboard"
 
 stepCount = 32
 
+local firstTime = false
+
+if not playdate.file.exists("settings.json") then
+  firstTime = true
+end
+
 import "funcs"
 import "buttons"
 import "consts"
@@ -22,11 +28,6 @@ songdir = "temp/"
 pd.file.mkdir("samples")
 pd.file.mkdir("songs")
 pd.file.mkdir("temp")
-
-settings = {["dark"]=true,["playonload"]=true,["cranksens"]=4,["author"]="anonymous",["output"]=3,["stoponsample"]=true,["stopontempo"]=true}
-crankSensList = {1,2,3,4,5,6,7,8}
-
-settings = loadSettings()
 
 marker = {0,0}
 cursor = {0,0}
@@ -394,4 +395,9 @@ snd.getHeadphoneState(function(phones,mic)
     displayInfo(text)
   end
 end)
+
 displayInfo("cs-16 v"..pd.metadata.version,2000)
+
+if firstTime then
+  messageBox.open("welcome to cs-16! :)\n\nbefore you begin, it is highly recommended that you read the manual, as most functions are not immediately apparent and are hard to reach without aid from the documentation.\n\nyou can read it at https://is.gd/cs16m/ (all capital letters).\n\npress a to continue.")
+end

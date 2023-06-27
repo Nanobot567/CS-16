@@ -103,7 +103,9 @@ function instrument.AButtonDown()
         instrument.selectedInst:setWaveform(newSample)
         trackNames[listview:getSelectedRow()] = "smp"
         newSample:save("temp/"..listview:getSelectedRow()..".pda")
-        newSample:save("temp/"..listview:getSelectedRow()..".wav")
+        if settings["savewavs"] == true then
+          newSample:save("temp/"..listview:getSelectedRow()..".wav")
+        end
         displayInfo("loaded "..filename)
       elseif file == "none" then
         print("ERROR INTENTIONAL! No sample selected.")
