@@ -1,11 +1,11 @@
 function table.find(t, value) -- finds value in the provided table and returns the index of it. if the item is not found, returns -1.
-  local index = -1
-  for i = 1, #t, 1 do
-    if value == t[i] then
-      index = i
-    end
+  -- blah, realized that there was already a function for this in the sdk (which is probably faster), so this is mainly just a shorthand func now
+  local found = table.indexOfElement(t, value)
+  if found == nil then
+    return -1
+  else
+    return found
   end
-  return index
 end
 
 function table.cycle(t, currentVal, backwards) -- returns the next value in the table after the currentVal.
@@ -260,6 +260,11 @@ end
 function loadSettings()
   local data = pd.datastore.read("settings")
   if data ~= nil then
+    if data["pmode"] ~= nil and data["pmode"] == true then
+      pd.display.setRefreshRate(50)
+    else
+      pd.display.setRefreshRate(30)
+    end
     return data
   end
   return settings

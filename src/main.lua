@@ -290,7 +290,7 @@ function pd.update()
     gfx.drawText(currentSeqStep,0,222)
     gfx.drawTextAligned(table.find(tracks,selectedTrack).."-"..trackNames[table.find(tracks,selectedTrack)],200,222,align.center)
 
-  elseif screenMode == "track" then -- at some point, maybe add a "+ track" thing?
+  elseif screenMode == "track" then
     local selRow = listview:getSelectedRow()
     if listviewContents[1] ~= "Ā" then
       listview:drawInRect(0, 0, 400, 240)

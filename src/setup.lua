@@ -1,7 +1,7 @@
 knobRotations = {0}
 crankSensList = {1,2,3,4,5,6,7,8}
 
-settings = {["dark"]=true,["playonload"]=true,["cranksens"]=4,["author"]="anonymous",["output"]=3,["stoponsample"]=true,["stopontempo"]=true,["savewavs"]=false}
+settings = {["dark"]=true,["playonload"]=true,["cranksens"]=4,["author"]="anonymous",["output"]=3,["stoponsample"]=true,["stopontempo"]=true,["savewavs"]=false,["pmode"]=false}
 settings = loadSettings()
 saveSettings()
 

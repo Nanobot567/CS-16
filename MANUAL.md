@@ -71,6 +71,8 @@ When you go to select a sample, you will arrive at a list, usually with four opt
 
 ![](assets/record.png)
 
+> to change the volume that CS-16 starts recording at, either press `right`/`left` for increments of 1 or `up`/`down` for increments of 5.
+
 2. `samples/` - this is your samples folder, containing all samples imported by the user.
 3. `songs/` - all of your saved songs are here.
 4. `temp/` - the `temp/` folder contains all of the samples in your song that has not yet been saved. This will be deleted at the end of a session.

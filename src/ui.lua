@@ -310,7 +310,7 @@ function sampleScreen.update()
   gfx.drawRect(50,110,300,20)
   gfx.fillRect(50,110,snd.micinput.getLevel()*300,20)
   fnt8x8:drawTextAligned(math.round(snd.micinput.getLevel(),2),200,116,align.center)
-  fnt8x8:drawTextAligned("will start recording from "..snd.micinput.getSource().." at volume "..sampleScreen.recAt,200,231,align.center)
+  fnt8x8:drawTextAligned("will start recording from "..snd.micinput.getSource().." if volume = "..sampleScreen.recAt,200,231,align.center)
   gfx.drawTextAligned(tostring(sampleScreen.recTimer.currentTime/1000).." / 5.0",200,20,align.center)
   pd.timer.updateTimers()
 end
@@ -328,6 +328,7 @@ end
 function sampleScreen.record()
   sampleScreen.recording = true
   sampleScreen.waiting = false
+  sampleScreen.recTimer:reset()
   sampleScreen.recTimer:start()
   local buffer = snd.sample.new(5, snd.kFormat16bitMono)
   snd.micinput.recordToSample(buffer, function(smp)
@@ -394,7 +395,7 @@ function sampleScreen.rightButtonDown()
   if sampleScreen.waitForButton == true then
     sampleScreen.sample:play()
   else
-    sampleScreen.recAt += 0.05
+    sampleScreen.recAt += 0.01
     sampleScreen.fixRec()
   end
 end
@@ -405,7 +406,7 @@ function sampleScreen.downButtonDown()
 end
 
 function sampleScreen.leftButtonDown()
-  sampleScreen.recAt -= 0.05
+  sampleScreen.recAt -= 0.01
   sampleScreen.fixRec()
 end
 
@@ -528,6 +529,8 @@ function settingsScreen.update()
   settingsList:drawInRect(0,0,400,240)
   fnt8x8:drawTextAligned("settings",200,0,align.center)
   fnt8x8:drawTextAligned("cs-16 version "..pd.metadata.version..", build "..pd.metadata.buildNumber,200,231,align.center)
+
+  pd.timer.updateTimers()
 end
 
 function settingsScreen.close()
@@ -594,6 +597,23 @@ function settingsScreen.AButtonDown()
     settings["stopontempo"] = not settings["stopontempo"]
   elseif row == 8 then
     settings["savewavs"] = not settings["savewavs"]
+  elseif row == 9 then
+    if settings["pmode"] == false then
+      messageBox.open("\n\nwarning!\n\nrunning cs-16 at 50fps will reduce your battery life, but improve performance.\n\nare you sure you want to enable this?\n\na = yes, b = no", function(ans)
+        if ans == "yes" then
+          settings["pmode"] = not settings["pmode"]
+          if settings["pmode"] == true then
+            pd.display.setRefreshRate(50)
+          else
+            pd.display.setRefreshRate(30)
+          end
+        end
+        settingsScreen.updateSettings()
+      end)
+    else
+      settings["pmode"] = not settings["pmode"]
+      pd.display.setRefreshRate(30)
+    end
   end
   settingsScreen.updateSettings()
 end
@@ -607,7 +627,7 @@ function settingsScreen.updateSettings()
   elseif settings["output"] == 3 then
     outputText = "auto"
   end
-  settingsList:set({"dark mode: "..tostring(settings["dark"]),"play on load: "..tostring(settings["playonload"]),"crank speed: "..settings["cranksens"],"author: "..settings["author"],"output: "..outputText,"stop if sampling: "..tostring(settings["stoponsample"]),"tempo edit stop: "..tostring(settings["stopontempo"]),"save .wav samples: "..tostring(settings["savewavs"])})
+  settingsList:set({"dark mode: "..tostring(settings["dark"]),"play on load: "..tostring(settings["playonload"]),"crank speed: "..settings["cranksens"],"author: "..settings["author"],"output: "..outputText,"stop if sampling: "..tostring(settings["stoponsample"]),"tempo edit stop: "..tostring(settings["stopontempo"]),"save .wav samples: "..tostring(settings["savewavs"]),"50fps: "..tostring(settings["pmode"])})
   saveSettings()
 end
 
@@ -622,7 +642,7 @@ sampleEditScreen.sampleLen = 0
 sampleEditScreen.trim = {0,0}
 sampleEditScreen.side = 1 -- 1 = begin, 2 = end
 
-function sampleEditScreen.open(sample, callback) -- this whole thing could look better!
+function sampleEditScreen.open(sample, callback)
   sampleEditScreen.sample = sample
   sampleEditScreen.editedSample = nil
   sampleEditScreen.callback = callback
@@ -633,6 +653,8 @@ function sampleEditScreen.open(sample, callback) -- this whole thing could look 
   sampleEditScreen.sampleLen = math.round(sample:getLength()*44100,0)
 
   sampleEditScreen.trim[2] = sampleEditScreen.sampleLen
+
+  sampleEditScreen.editedSample = sampleEditScreen.sample:getSubsample(sampleEditScreen.trim[1],sampleEditScreen.trim[2])
 
   pd.inputHandlers.push(sampleEditScreen,true)
   sampleEditScreen.oldUpdate = pd.update
@@ -697,9 +719,12 @@ end
 
 messageBox = {}
 messageBox.oldUpdate = nil
+messageBox.callback = nil
 --messageBox.message = ""
 
-function messageBox.open(message)
+function messageBox.open(message, callback)
+  gfx.clear()
+  messageBox.callback = callback
   gfx.drawTextInRect(message,0,0,400,240,nil,nil,align.center)
 
   pd.inputHandlers.push(messageBox,true)
@@ -712,14 +737,17 @@ function messageBox.update()
 end
 
 function messageBox.AButtonDown()
-  messageBox.close()
+  messageBox.close("yes")
 end
 
 function messageBox.BButtonDown()
-  messageBox.close()
+  messageBox.close("no")
 end
 
-function messageBox.close()
+function messageBox.close(ans)
   pd.inputHandlers.pop()
   pd.update = messageBox.oldUpdate
+  if messageBox.callback ~= nil then
+    messageBox.callback(ans)
+  end
 end

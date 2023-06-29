@@ -32,3 +32,5 @@ a synthesizer for playdate
 ![](assets/song.png)
 
 *song view*
+
+### please feel free to submit PRs, report bugs, and request new features!

@@ -118,7 +118,7 @@ function instrument.AButtonDown()
     local sequ = instrument.samplePreviewElems[2]
     sequ:allNotesOff()
     local inst = snd.synth.new()
-    local len = 3
+    local len = 1
     if trackNames[selRow] == "smp" then
       instrument.sample:load("temp/"..selRow..".pda")
       inst:setWaveform(WAVE_SIN)
