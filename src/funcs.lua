@@ -1,3 +1,62 @@
+-- helper functions!
+
+function drawCursor()
+  gfx.setColor(gfx.kColorXOR)
+  gfx.setLineWidth(3)
+  gfx.drawRect(cursor[1]*25,cursor[2]*25,25,25)
+  gfx.setLineWidth(1)
+  gfx.setColor(gfx.kColorBlack)
+end
+
+function drawSteps()
+  currentSeqStep = seq:getCurrentStep()
+  local markerX, markerY
+  local lasty = 0
+
+  for i = 1, stepCount do
+    markerY = math.floor((i - 1) / 16) * 25
+    markerX = (((i - 1) % 16) * 25)
+
+    noteOff:draw(markerX, markerY)
+    lasty = markerY
+  end
+
+  markerY = math.floor((currentSeqStep - 1) / 16) * 25
+  markerX = ((currentSeqStep - 1) % 16) * 25
+
+  if seq:isPlaying() then
+    noteOn:draw(markerX, markerY)
+  end
+
+  local activeStr = ""
+  for i=1, #tracks do
+    activeStr = activeStr..tostring(tracks[i]:getNotesActive())
+  end
+
+  gfx.drawTextAligned(activeStr,200,lasty+27,align.center)
+end
+
+function drawInsts()
+  local notes = selectedTrack:getNotes()
+  local seqSegment = math.ceil(seq:getCurrentStep()/32)
+  for i = 1, #notes, 1 do
+    local step = notes[i]["step"]-1
+    if step >= stepCount  then
+      break
+    end
+    local stepx, stepy
+    if step > 15 then
+      stepx = (step%16)*25
+      stepy = (math.floor(step/16))*25
+    else
+      stepx = (step)*25
+      stepy = 0
+    end
+
+    notePlaced:fadedImage(notes[i]["velocity"],gfx.image.kDitherTypeBayer4x4):draw(stepx,stepy)
+  end
+end
+
 function table.find(t, value) -- finds value in the provided table and returns the index of it. if the item is not found, returns -1.
   -- blah, realized that there was already a function for this in the sdk (which is probably faster), so this is mainly just a shorthand func now
   local found = table.indexOfElement(t, value)

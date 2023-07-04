@@ -1,4 +1,5 @@
 -- this is CS-16, a synthesizer for playdate.
+-- dedicated to my dog, Bella, who passed on 7/1/23. we'll miss you!
 
 import "CoreLibs/graphics"
 import "CoreLibs/ui"
@@ -44,10 +45,6 @@ currentElem = 1
 autonote = "none"
 songAuthor = settings["author"]
 
-pd.setMenuImage(gfx.image.new("img/menu"))
-pd.setCrankSoundsDisabled(true)
-
-gfx.setImageDrawMode(gfx.kDrawModeNXOR)
 pd.display.setInverted(settings["dark"])
 
 pd.inputHandlers.push(pattern, true)
@@ -72,62 +69,6 @@ buttons = {Button(5,5,nil,nil,"back",true),Button(310,55,nil,nil,"toggle",true),
 
 allElems = {buttons[1],knobs[1],knobs[2],knobs[3],knobs[4],knobs[5],buttons[2],buttons[3],buttons[4],knobs[6],knobs[7],knobs[8],knobs[9]}
 
-function drawCursor()
-  gfx.setColor(gfx.kColorXOR)
-  gfx.setLineWidth(3)
-  gfx.drawRect(cursor[1]*25,cursor[2]*25,25,25)
-  gfx.setLineWidth(1)
-  gfx.setColor(gfx.kColorBlack)
-end
-
-function drawSteps()
-  currentSeqStep = seq:getCurrentStep()
-  local markerX, markerY
-  local lasty = 0
-
-  for i = 1, stepCount do
-    markerY = math.floor((i - 1) / 16) * 25
-    markerX = (((i - 1) % 16) * 25)
-
-    noteOff:draw(markerX, markerY)
-    lasty = markerY
-  end
-
-  markerY = math.floor((currentSeqStep - 1) / 16) * 25
-  markerX = ((currentSeqStep - 1) % 16) * 25
-
-  if seq:isPlaying() then
-    noteOn:draw(markerX, markerY)
-  end
-
-  local activeStr = ""
-  for i=1, #tracks do
-    activeStr = activeStr..tostring(tracks[i]:getNotesActive())
-  end
-
-  gfx.drawTextAligned(activeStr,200,lasty+27,align.center)
-end
-
-function drawInsts()
-  local notes = selectedTrack:getNotes()
-  local seqSegment = math.ceil(seq:getCurrentStep()/32)
-  for i = 1, #notes, 1 do
-    local step = notes[i]["step"]-1
-    if step >= stepCount  then
-      break
-    end
-    local stepx, stepy
-    if step > 15 then
-      stepx = (step%16)*25
-      stepy = (math.floor(step/16))*25
-    else
-      stepx = (step)*25
-      stepy = 0
-    end
-
-    notePlaced:fadedImage(notes[i]["velocity"],gfx.image.kDitherTypeBayer4x4):draw(stepx,stepy)
-  end
-end
 
 function pd.update()
   local crank = 0
@@ -143,13 +84,13 @@ function pd.update()
     crank = 0
   end
 
-  if crank ~= 0 then
+  if crank ~= 0 then -- if cranked, then do action selected.
     local b = nil
     if crank == -1 then
       b = true
     end
 
-    if crankMode == "note status" then
+    if crankMode == "note status" then -- no "displayInfo" here because i thought it would get in the way
       if autonote == "none" then
         toggleNote(getStepFromCursor(cursor))
       else
@@ -278,7 +219,7 @@ function pd.update()
 
   gfx.clear()
 
-  if screenMode == "pattern" then
+  if screenMode == "pattern" then -- all the drawing functions
     drawInsts()
     drawSteps()
     drawCursor()
@@ -398,6 +339,6 @@ end)
 
 displayInfo("cs-16 v"..pd.metadata.version,2000)
 
-if firstTime then
+if firstTime then -- reading the manual is pretty important, so i thought this would be helpful.
   messageBox.open("welcome to cs-16! :)\n\nbefore you begin, it is highly recommended that you read the manual, as most functions are not immediately apparent and are hard to reach without aid from the documentation.\n\nyou can read it at https://is.gd/cs16m/ (all capital letters).\n\npress a to continue.")
 end

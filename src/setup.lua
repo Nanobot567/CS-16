@@ -60,3 +60,8 @@ for i=1, #tracks do
   seq:addTrack(tracks[i])
 end
 seq:play()
+
+pd.setMenuImage(gfx.image.new("img/menu"))
+pd.setCrankSoundsDisabled(true)
+
+gfx.setImageDrawMode(gfx.kDrawModeNXOR)

@@ -47,7 +47,7 @@ function pattern.leftButtonDown()
   end
 end
 
-function instrument.AButtonDown()
+function instrument.AButtonDown() -- sorry, "track" screen in manual is referred to as "instrument" in source code. silly me :P
   local selRow = listview:getSelectedRow()
   if listviewContents[1] ~= "Ā" then
     instrument.selectedInst = instrumentTable[selRow]

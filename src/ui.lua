@@ -1,3 +1,5 @@
+-- ui classes and sub-screens (keyboard screen, settings screen, etc. basically everything else that uses inputHandlers.)
+
 class("Knob").extends()
 class("Button").extends()
 

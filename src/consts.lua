@@ -1,3 +1,5 @@
+-- all constants used in the app.
+
 pd = playdate
 gfx = pd.graphics
 snd = pd.sound
