@@ -311,6 +311,7 @@ function loadSave(name)
 
     listview:set(finalListViewContents)
   end
+  cursor = {0,0}
   print("success!")
 end
 
