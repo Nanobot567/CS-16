@@ -24,6 +24,9 @@ import "setup"
 import "lists"
 import "ui"
 
+sinetimer = pd.timer.new(400-getTempoFromSPS(seq:getTempo()))
+sinetimer.repeats = true
+
 songdir = "temp/"
 
 pd.file.mkdir("samples")
@@ -154,8 +157,10 @@ function pd.update()
       if seq:isPlaying() and settings["stopontempo"] then
         seq:stop()
         seq:goToStep(1)
+        sinetimer:pause()
       end
       seq:setTempo(math.max(2,math.min(64,seq:getTempo()+crank)))
+      sinetimer.duration = 400-getTempoFromSPS(seq:getTempo())
     elseif crankMode == "pattern length" then
       local newThing = stepCount+(crank*16)
       if newThing <= 128 and newThing >= 16 then
@@ -166,6 +171,10 @@ function pd.update()
         end
       end
       seq:setLoops(1,stepCount)
+
+      if not seq:isPlaying() then
+        sinetimer:pause()
+      end
 
     elseif crankMode == "turn knob" and listviewContents[#listviewContents] == "Ā" then
       if allElems[currentElem]:isa(Knob) then
@@ -280,6 +289,11 @@ function pd.update()
       toDraw = string.split(songdir,"/")[#string.split(songdir,"/")-1]
     end
     gfx.drawTextInRect(toDraw.." by "..songAuthor,0,0,400,240,nil,nil,align.center)
+
+    if settings["visualizer"] then
+      gfx.drawSineWave(0,120,405,120,stepCount/2,stepCount/2,math.max(10,400-getTempoFromSPS(seq:getTempo())),sinetimer.currentTime) -- TODO: visualizer in later update!
+    end
+    -- vis idea: for each instrument playing, put a visual down somewhere
 
     gfx.drawTextAligned(curMet..getTempoFromSPS(seq:getTempo()), 400, 222, align.right)
     gfx.drawText(stepCount.." steps", 0, 222)

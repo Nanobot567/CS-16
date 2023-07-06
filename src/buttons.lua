@@ -13,8 +13,11 @@ function pattern.AButtonDown()
   if seq:isPlaying() then
     seq:stop()
     seq:goToStep(1)
+    sinetimer:pause()
   else
     seq:play()
+    sinetimer:reset()
+    sinetimer:start()
   end
 end
 
@@ -236,8 +239,11 @@ function song.AButtonDown()
   if seq:isPlaying() then
     seq:stop()
     seq:goToStep(1)
+    sinetimer:pause()
   else
     seq:play()
+    sinetimer:reset()
+    sinetimer:start()
   end
 end
 

@@ -251,6 +251,7 @@ end
 
 function loadSave(name)
   seq:stop()
+  seq:allNotesOff()
   seq:goToStep(1)
 
   pd.file.delete("temp/",true)
@@ -292,6 +293,7 @@ function loadSave(name)
     instrument.allMuted = false
 
     seq:setTempo(tmp[2][1]) -- TODO: be sure to implement real world bpm changes once fix is pushed!
+    sinetimer.duration = 400-getTempoFromSPS(seq:getTempo())
     stepCount = tmp[2][2]
     seq:setLoops(1,stepCount)
 
@@ -381,6 +383,7 @@ function applyMenuItems(mode)
 
           if settings["playonload"] == true then
             seq:play()
+            sinetimer:start()
           end
           applyMenuItems("pattern")
         else

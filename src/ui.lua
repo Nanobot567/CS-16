@@ -91,7 +91,7 @@ end
 
 -- alternate pd.updates
 
-filePicker = {}
+filePicker = {cranked = function() end}
 filePicker.selectedFile = nil
 filePicker.callback = nil
 filePicker.oldUpdate = nil
@@ -520,6 +520,9 @@ function settingsScreen.open()
 
   pd.getSystemMenu():removeAllMenuItems()
 
+  settingsList:setSelectedRow(1)
+  settingsList:scrollToRow(1)
+
   pd.inputHandlers.push(settingsScreen,true)
   settingsScreen.oldUpdate = pd.update
   pd.update = settingsScreen.update
@@ -600,6 +603,8 @@ function settingsScreen.AButtonDown()
   elseif row == 8 then
     settings["savewavs"] = not settings["savewavs"]
   elseif row == 9 then
+    settings["visualizer"] = not settings["visualizer"]
+  elseif row == 10 then
     if settings["pmode"] == false then
       messageBox.open("\n\nwarning!\n\nrunning cs-16 at 50fps will reduce your battery life, but improve performance.\n\nare you sure you want to enable this?\n\na = yes, b = no", function(ans)
         if ans == "yes" then
@@ -629,7 +634,7 @@ function settingsScreen.updateSettings()
   elseif settings["output"] == 3 then
     outputText = "auto"
   end
-  settingsList:set({"dark mode: "..tostring(settings["dark"]),"play on load: "..tostring(settings["playonload"]),"crank speed: "..settings["cranksens"],"author: "..settings["author"],"output: "..outputText,"stop if sampling: "..tostring(settings["stoponsample"]),"tempo edit stop: "..tostring(settings["stopontempo"]),"save .wav samples: "..tostring(settings["savewavs"]),"50fps: "..tostring(settings["pmode"])})
+  settingsList:set({"dark mode: "..tostring(settings["dark"]),"play on load: "..tostring(settings["playonload"]),"crank speed: "..settings["cranksens"],"author: "..settings["author"],"output: "..outputText,"stop if sampling: "..tostring(settings["stoponsample"]),"tempo edit stop: "..tostring(settings["stopontempo"]),"save .wav samples: "..tostring(settings["savewavs"]),"visualizer: "..tostring(settings["visualizer"]),"50fps: "..tostring(settings["pmode"])})
   saveSettings()
 end
 
