@@ -605,6 +605,8 @@ function settingsScreen.AButtonDown()
   elseif row == 9 then
     settings["visualizer"] = not settings["visualizer"]
   elseif row == 10 then
+    settings["num/max"] = not settings["num/max"]
+  elseif row == 11 then
     if settings["pmode"] == false then
       messageBox.open("\n\nwarning!\n\nrunning cs-16 at 50fps will reduce your battery life, but improve performance.\n\nare you sure you want to enable this?\n\na = yes, b = no", function(ans)
         if ans == "yes" then
@@ -634,7 +636,7 @@ function settingsScreen.updateSettings()
   elseif settings["output"] == 3 then
     outputText = "auto"
   end
-  settingsList:set({"dark mode: "..tostring(settings["dark"]),"play on load: "..tostring(settings["playonload"]),"crank speed: "..settings["cranksens"],"author: "..settings["author"],"output: "..outputText,"stop if sampling: "..tostring(settings["stoponsample"]),"tempo edit stop: "..tostring(settings["stopontempo"]),"save .wav samples: "..tostring(settings["savewavs"]),"visualizer: "..tostring(settings["visualizer"]),"50fps: "..tostring(settings["pmode"])})
+  settingsList:set({"dark mode: "..tostring(settings["dark"]),"play on load: "..tostring(settings["playonload"]),"crank speed: "..settings["cranksens"],"author: "..settings["author"],"output: "..outputText,"stop if sampling: "..tostring(settings["stoponsample"]),"tempo edit stop: "..tostring(settings["stopontempo"]),"save .wav samples: "..tostring(settings["savewavs"]),"visualizer: "..tostring(settings["visualizer"]),"show number/total: "..tostring(settings["num/max"]),"50fps: "..tostring(settings["pmode"])})
   saveSettings()
 end
 

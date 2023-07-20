@@ -37,7 +37,7 @@ marker = {0,0}
 cursor = {0,0}
 trackNames = {"sin","squ","saw","tri","nse","poP","poD","poV","sin","squ","saw","tri","nse","poP","poD","poV"}
 crankModes = crankModesList[1]
-crankMode = "pitch"
+crankMode = "note status"
 tempo = 120.0
 selectedTrack = tracks[1]
 textTimer = nil
@@ -152,15 +152,21 @@ function pd.update()
         pd.inputHandlers.push(song, true)
       end
       applyMenuItems(screenMode)
-      displayInfo("screen: "..screenMode,750)
+
+      local append = ""
+      if settings["num/max"] == true then
+        append = " - "..table.find(screenModes,screenMode).."/"..#screenModes
+      end
+
+      displayInfo("screen: "..screenMode..append,750)
     elseif crankMode == "tempo" then
+      seq:setTempo(math.max(2,math.min(64,seq:getTempo()+crank)))
+      sinetimer.duration = 400-getTempoFromSPS(seq:getTempo())
       if seq:isPlaying() and settings["stopontempo"] then
         seq:stop()
         seq:goToStep(1)
         sinetimer:pause()
       end
-      seq:setTempo(math.max(2,math.min(64,seq:getTempo()+crank)))
-      sinetimer.duration = 400-getTempoFromSPS(seq:getTempo())
     elseif crankMode == "pattern length" then
       local newThing = stepCount+(crank*16)
       if newThing <= 128 and newThing >= 16 then

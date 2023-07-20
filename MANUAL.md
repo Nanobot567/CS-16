@@ -105,7 +105,7 @@ To add your own samples, follow these steps:
 	- Using FFMPEG: `ffmpeg -i input_file -c:a pcm_s16le output_file.wav`
         - to reduce file size, you can also add these flags: `-ac 1` (converts to mono) `-b:a 128k` (makes bitrate 128kbps [reduces audio quality slightly, you can go lower if you want])
 	- Using Audacity: File -> Export as WAV... -> Signed 16 bit PCM
-2. compile them using `pdc` into a playdate PDX, which will convert the audio files into PDA files (i have provided a pre-made folder for this in `/assets/`. Simply place your .WAVs into that folder, run `pdc convert`, and grab your .PDAs from convert.pdx.)
+2. compile them using `pdc` from the [Playdate SDK](https://play.date/dev/) into a playdate PDX, which will convert the audio files into PDA files (i have provided a pre-made folder for this in `/assets/`. Simply place your .WAVs into that folder, run `pdc convert`, and grab your .PDAs from convert.pdx.)
 3. put your playdate into [data disk mode](https://help.play.date/games/backups/)
 4. drag the PDAs into the `Data/user.*****.com.nano.cs16/samples/` folder on your playdate (feel free to use folders to organize your samples, CS-16 supports them) and eject it when finished.
 

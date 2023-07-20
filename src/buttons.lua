@@ -23,7 +23,11 @@ end
 
 function pattern.BButtonDown()
   crankMode = table.cycle(crankModes,crankMode)
-  displayInfo(crankMode)
+  local append = ""
+  if settings["num/max"] == true then
+    append = " - "..table.find(crankModes,crankMode).."/"..#crankModes  
+  end
+  displayInfo(crankMode..append)
 end
 
 function pattern.upButtonDown()
@@ -150,12 +154,19 @@ function instrument.AButtonDown() -- sorry, "track" screen in manual is referred
 end
 
 function instrument.BButtonDown()
+  local cur,max = table.find(crankModes,crankMode),#crankModes
   if listviewContents[1] == "Ā" then
     crankMode = table.cycle(crankModes,crankMode)
   else
     crankMode = "screen"
+    cur,max = 1,1
   end
-  displayInfo(crankMode)
+
+  local append = ""
+  if settings["num/max"] == true then
+    append = " - "..cur.."/"..max
+  end
+  displayInfo(crankMode..append)
 end
 
 function instrument.upButtonDown()
@@ -248,9 +259,12 @@ function song.AButtonDown()
 end
 
 function song.BButtonDown()
-  textTimer = pd.timer.new(1000, nil)
   crankMode = table.cycle(crankModes,crankMode)
-  textTimerText = crankMode
+  local append = ""
+  if settings["num/max"] == true then
+    append = " - "..table.find(crankModes,crankMode).."/"..#crankModes  
+  end
+  displayInfo(crankMode..append)
 end
 
 function song.upButtonDown()

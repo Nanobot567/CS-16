@@ -69,8 +69,9 @@ end
 
 function table.cycle(t, currentVal, backwards) -- returns the next value in the table after the currentVal.
   local val
+  local find = table.find(t,currentVal)
 
-  if table.find(t,currentVal) == -1 then
+  if find == -1 then
     return t[1]
   end
 
@@ -78,13 +79,13 @@ function table.cycle(t, currentVal, backwards) -- returns the next value in the 
     if currentVal == t[1] then
       val = t[#t]
     else
-      val = t[table.find(t,currentVal)-1]
+      val = t[find-1]
     end
   else
     if currentVal == t[#t] then
       val = t[1]
     else
-      val = t[table.find(t,currentVal)+1]
+      val = t[find+1]
     end
   end
 
@@ -322,7 +323,13 @@ end
 function loadSettings()
   local data = pd.datastore.read("settings")
   if data ~= nil then
-    if data["pmode"] ~= nil and data["pmode"] == true then
+    for k,v in pairs(settings) do
+      if table.find(data,k) == -1 then
+        data[k] = settings[k]
+      end
+    end
+
+    if data["pmode"] == true then
       pd.display.setRefreshRate(50)
     else
       pd.display.setRefreshRate(30)
