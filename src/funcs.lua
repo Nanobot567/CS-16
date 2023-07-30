@@ -323,12 +323,6 @@ end
 function loadSettings()
   local data = pd.datastore.read("settings")
   if data ~= nil then
-    for k,v in pairs(settings) do
-      if table.find(data,k) == -1 then
-        data[k] = settings[k]
-      end
-    end
-
     if data["pmode"] == true then
       pd.display.setRefreshRate(50)
     else
@@ -362,7 +356,7 @@ function applyMenuItems(mode)
         startname = string.split(songdir,"/")[#string.split(songdir,"/")-1]
       end
       keyboardScreen.open("song name:",startname,20,function(name)
-        if name ~= "_EXITED_KEYBOĀRD" then
+        if name ~= "_EXITED_KEYBOĀRD" then -- this is such a lame solution, but it works!
           buildSave(name)
           displayInfo("saved song "..name)
           songdir = "/songs/"..name.."/ (song)"

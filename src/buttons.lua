@@ -262,7 +262,7 @@ function song.BButtonDown()
   crankMode = table.cycle(crankModes,crankMode)
   local append = ""
   if settings["num/max"] == true then
-    append = " - "..table.find(crankModes,crankMode).."/"..#crankModes  
+    append = " - "..table.find(crankModes,crankMode).."/"..#crankModes
   end
   displayInfo(crankMode..append)
 end

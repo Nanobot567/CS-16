@@ -281,6 +281,7 @@ function sampleScreen.open(callback)
   sampleScreen.oldUpdate = nil
   sampleScreen.waiting = false
   sampleScreen.waitForButton = false
+  sampleScreen.recTimer = pd.timer.new(5000)
   sampleScreen.recTimer:reset()
   sampleScreen.recTimer:pause()
   state = "press A to arm..."

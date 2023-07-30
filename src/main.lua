@@ -297,9 +297,18 @@ function pd.update()
     gfx.drawTextInRect(toDraw.." by "..songAuthor,0,0,400,240,nil,nil,align.center)
 
     if settings["visualizer"] then
+      gfx.setLineWidth(2)
       gfx.drawSineWave(0,120,405,120,stepCount/2,stepCount/2,math.max(10,400-getTempoFromSPS(seq:getTempo())),sinetimer.currentTime) -- TODO: visualizer in later update!
+      gfx.setLineWidth(1)
     end
-    -- vis idea: for each instrument playing, put a visual down somewhere
+
+    for i=1, 16 do
+      if instrumentTable[i]:isPlaying() then
+        gfx.setColor(gfx.kColorXOR)
+        gfx.fillRoundRect((i*25)-22,110,20,20,2)
+        gfx.setColor(gfx.kColorBlack)
+      end
+    end
 
     gfx.drawTextAligned(curMet..getTempoFromSPS(seq:getTempo()), 400, 222, align.right)
     gfx.drawText(stepCount.." steps", 0, 222)
