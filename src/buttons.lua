@@ -59,7 +59,7 @@ function instrument.AButtonDown() -- sorry, "track" screen in manual is referred
   if listviewContents[1] ~= "Ā" then
     instrument.selectedInst = instrumentTable[selRow]
     listview:set({"Ā"})
-    knobs[1]:setClicks(table.find(trackNames,trackNames[selRow])-1)
+    knobs[1]:setClicks(table.find(waveNames,trackNames[selRow])-1)
 
     local adsr = instrumentADSRtable[selRow]
 
