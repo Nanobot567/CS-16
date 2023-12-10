@@ -51,6 +51,10 @@ function filePickList:set(t)
   filePickList:setNumberOfRows(#t)
 end
 
+function filePickList:get()
+  return filePickListContents
+end
+
 
 settingsListContents = {}
 
@@ -74,3 +78,8 @@ function settingsList:set(t)
   settingsListContents = t
   settingsList:setNumberOfRows(#t)
 end
+
+function settingsList:get()
+  return settingsListContents
+end
+

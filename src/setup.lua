@@ -1,9 +1,48 @@
 knobRotations = {0}
 crankSensList = {1,2,3,4,5,6,7,8}
 
-settings = {["dark"]=true,["playonload"]=true,["cranksens"]=4,["author"]="anonymous",["output"]=3,["stoponsample"]=true,["stopontempo"]=true,["savewavs"]=false,["visualizer"]=true,["pmode"]=false,["num/max"]=true}
+settings = {
+  ["dark"]=true,
+  ["playonload"]=true,
+  ["cranksens"]=4,
+  ["author"]="anonymous",
+  ["output"]=3,
+  ["stoponsample"]=true,
+  ["stopontempo"]=true,
+  ["savewavs"]=false,
+  ["visualizer"]=3,
+  ["pmode"]=false,
+  ["num/max"]=true,
+  -- button mapping for recording
+  ["aRecTrack"]=2,
+  ["bRecTrack"]=1,
+  ["upRecTrack"]=3,
+  ["downRecTrack"]=5,
+  ["leftRecTrack"]=6,
+  ["rightRecTrack"]=4,
+  ["recordQuantization"]=1,
+  ["sample16bit"]=true,
+  ["showNoteNames"]=true,
+  ["useSystemFont"]=false,
+  ["saveWaveforms"]=false,
+  ["screenAnimation"]=true
+}
 settings = loadSettings()
 saveSettings()
+
+metronomeTrack = snd.track.new()
+local metronome = synth.new(WAVE_SQU)
+metronome:setVolume(0.1)
+metronomeTrack:setInstrument(metronome)
+for i=1, 128 do
+  if i == 1 then
+    metronomeTrack:addNote(i, "C6", 1)
+  elseif i % 8 == 1 then
+    metronomeTrack:addNote(i, "C5", 1)
+  end
+end
+
+metronomeTrack:setMuted(true)
 
 local i1 = synth.new(WAVE_SIN)
 local i2 = synth.new(WAVE_SQU)
@@ -59,6 +98,9 @@ seq:setLoops(1,stepCount)
 for i=1, #tracks do
   seq:addTrack(tracks[i])
 end
+
+seq:addTrack(metronomeTrack)
+
 seq:play()
 
 pd.setMenuImage(gfx.image.new("img/menu"))

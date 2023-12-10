@@ -17,19 +17,15 @@ a synthesizer for playdate
 
 ## screenshots
 
-![](assets/pattern.png)
-
-*pattern view*
-
-![](assets/track.png)
+![pattern view](assets/pattern.png "patte![track view](assets/track.png "track view")s/track.png "pattern view")
 
 *track view*
 
-![](assets/track-2.png)
+![track edit view](assets/track-2.png "track edit view")
 
 *track edit view*
 
-![](assets/song.png)
+![song view](assets/song.png "song view")
 
 *song view*
 

@@ -62,7 +62,7 @@ function Button:init(x,y,w,h,text,smallfont)
   self.text = text
 end
 
-function Button:draw(selected)
+function Button:draw(selected, pressed)
   local w = self.w
   local h = self.h
 
@@ -75,8 +75,16 @@ function Button:draw(selected)
     h = 13
   end
 
+  if pressed == true then
+    gfx.setColor(gfx.kColorWhite)
+  end
+
   local fontdraw = fnt
   gfx.drawRect(self.x,self.y,w,h)
+
+  if pressed == true then
+    gfx.setColor(gfx.kColorBlack)
+  end
 
   if selected ~= nil then
     gfx.drawRoundRect(self.x-3,self.y-3,w+6,h+6,2)
@@ -98,6 +106,7 @@ filePicker.oldUpdate = nil
 filePicker.mode = nil
 filePicker.sample = snd.sampleplayer.new(snd.sample.new(1))
 filePicker.keyTimer = nil
+filePicker.animator = nil
 
 local dirs = {}
 local currentPath = "/"
@@ -121,6 +130,8 @@ function filePicker.open(callback, mode)
     currentPath = "/"
   end
 
+  filePicker.anim()
+
   pd.inputHandlers.push(filePicker,true)
   filePicker.oldUpdate = pd.update
   pd.update = filePicker.update
@@ -139,7 +150,7 @@ function filePicker.update()
   end
 
   if filePickList.needsDisplay == true then
-    filePickList:drawInRect(0,0,400,240)
+    filePickList:drawInRect(filePicker.animator:currentValue(),0,400,240)
     fnt8x8:drawTextAligned("choose a "..ftype,200,0,align.center)
   end
 
@@ -150,35 +161,38 @@ function filePicker.close()
   pd.inputHandlers.pop()
   pd.update = filePicker.oldUpdate
   filePicker.callback(filePicker.selectedFile)
+  filePicker.animator = nil
 end
 
 function filePicker.AButtonDown()
   if pd.file.isdir(currentPath..filePickListContents[row]) then
+    filePicker.anim()
     table.insert(dirs, currentPath)
     table.insert(dirLocations, row)
     currentPath = currentPath..filePickListContents[row]
     filePickList:set(filePicker.modifyDirContents(pd.file.listFiles(currentPath)))
     filePickList:setSelectedRow(1)
     filePickList:scrollToRow(1)
-  elseif filePickListContents[row] == "Ā" then
+  elseif filePickListContents[row] == "*Ā*" then
+    filePicker.anim(true)
     currentPath = table.remove(dirs)
     filePickList:set(filePicker.modifyDirContents(pd.file.listFiles(currentPath)))
     local rmed = table.remove(dirLocations)
     filePickList:setSelectedRow(rmed)
     filePickList:scrollToRow(rmed)
-  elseif filePickListContents[row] == "Ą record sample" then
+  elseif filePickListContents[row] == "*Ą* record sample" then
     sampleScreen.open(function(sample)
       filePicker.selectedFile = sample
       filePicker.close()
     end)
-  elseif filePickListContents[row] == "ċ edit sample" then
+  elseif filePickListContents[row] == "*ċ* edit sample" then
     sampleEditScreen.open(snd.sample.new("temp/"..listview:getSelectedRow()..".pda"), function(sample)
       filePicker.selectedFile = sample
       filePicker.close()
-    end)
+    end, pd.datastore.readImage("temp/"..listview:getSelectedRow()..".pdi"))
   else
     if filePicker.mode ~= "song" or string.find(filePickListContents[row],"%/ %(song%)") then
-      filePicker.selectedFile = currentPath..filePickListContents[row]
+      filePicker.selectedFile = string.unnormalize(currentPath..filePickListContents[row])
       filePicker.close()
     end
   end
@@ -194,13 +208,14 @@ function filePicker.BButtonDown()
     local rmed = table.remove(dirLocations)
     filePickList:setSelectedRow(rmed)
     filePickList:scrollToRow(rmed)
+    filePicker.anim(true)
   end
 end
 
 function filePicker.rightButtonDown()
   if not pd.file.isdir(currentPath..filePickListContents[row]) and string.find(filePickListContents[row],"%.pda") then
     filePicker.sample:stop()
-    filePicker.sample:setSample(snd.sample.new(currentPath..filePickListContents[row]))
+    filePicker.sample:setSample(snd.sample.new(string.unnormalize(currentPath..filePickListContents[row])))
     filePicker.sample:play()
   end
 end
@@ -231,6 +246,14 @@ function filePicker.downButtonUp()
   end
 end
 
+function filePicker.anim(back)
+  gfx.clear()
+  if back then
+    filePicker.animator = gfx.animator.new(200, -200, 0, pd.easingFunctions.outQuart)
+  else
+    filePicker.animator = gfx.animator.new(200, 200, 0, pd.easingFunctions.outQuart)
+  end
+end
 
 function filePicker.modifyDirContents(val)
   if currentPath == "/" then
@@ -247,16 +270,17 @@ function filePicker.modifyDirContents(val)
         val[i] = val[i].." (song)"
       end
     end
+    val[i] = string.normalize(val[i])
   end
 
   if currentPath ~= "/" then
-    table.insert(val,1,"Ā")
+    table.insert(val,1,"*Ā*")
   elseif filePicker.mode ~= "song" then
-    table.insert(val,1,"Ą record sample")
+    table.insert(val,1,"*Ą* record sample")
   end
 
   if filePicker.mode == "newsmp" and currentPath == "/" then
-    table.insert(val,1,"ċ edit sample")
+    table.insert(val,1,"*ċ* edit sample")
   end
 
   return val
@@ -271,6 +295,9 @@ sampleScreen.waiting = false
 sampleScreen.waitForButton = false
 sampleScreen.recAt = 0.15
 sampleScreen.recTimer = pd.timer.new(5000)
+sampleScreen.waveformImage = nil
+sampleScreen.waveformAnimator = nil
+sampleScreen.waveformLastXY = {0,20}
 
 local state = "press A to arm..."
 
@@ -284,6 +311,8 @@ function sampleScreen.open(callback)
   sampleScreen.recTimer = pd.timer.new(5000)
   sampleScreen.recTimer:reset()
   sampleScreen.recTimer:pause()
+  sampleScreen.waveformImage = gfx.image.new(400, 45)
+  sampleScreen.waveformLastXY = {0,20}
   state = "press A to arm..."
 
 
@@ -306,7 +335,19 @@ function sampleScreen.update()
   gfx.clear()
   if sampleScreen.waiting == true and snd.micinput.getLevel() > sampleScreen.recAt then
     state = "recording..."
+    sampleScreen.waveformAnimator = gfx.animator.new(5000, 1, 400)
     sampleScreen.record()
+  end
+
+  if sampleScreen.recording == true then
+    local lastxy = sampleScreen.waveformLastXY
+    local x = sampleScreen.waveformAnimator:currentValue()
+    local y = 40+((-snd.micinput.getLevel())*40)
+    gfx.pushContext(sampleScreen.waveformImage)
+    gfx.drawLine(lastxy[1], lastxy[2], x, y)
+    gfx.popContext()
+    sampleScreen.waveformLastXY = {x, y}
+    sampleScreen.waveformImage:draw(0, 55)
   end
 
   gfx.drawTextAligned(state,200,0,align.center)
@@ -321,7 +362,11 @@ end
 function sampleScreen.close()
   pd.inputHandlers.pop()
   pd.update = sampleScreen.oldUpdate
-  sampleScreen.callback(sampleScreen.sample)
+  if settings["saveWaveforms"] == true then
+    sampleScreen.callback({sampleScreen.sample, sampleScreen.waveformImage:copy()})
+  else
+    sampleScreen.callback(sampleScreen.sample)
+  end
 
   if settings["stoponsample"] == true then
     seq:play()
@@ -333,7 +378,14 @@ function sampleScreen.record()
   sampleScreen.waiting = false
   sampleScreen.recTimer:reset()
   sampleScreen.recTimer:start()
-  local buffer = snd.sample.new(5, snd.kFormat16bitMono)
+
+  local format = snd.kFormat16bitMono
+
+  if settings["sample16bit"] == false then
+    format = snd.kFormat8bitMono
+  end
+
+  local buffer = snd.sample.new(5, format)
   snd.micinput.recordToSample(buffer, function(smp)
     sampleScreen.sample = smp
     snd.micinput.stopListening()
@@ -347,6 +399,7 @@ function sampleScreen.record()
     gfx.clear()
     smp:play()
     gfx.drawTextInRect("save?\n\na to save, b to redo, right to hear again",20,85,360,200,nil,nil,align.center)
+    sampleScreen.waveformImage:drawCentered(400-(sampleScreen.waveformAnimator:currentValue()/2), 45)
     pd.stop()
     ::continue::
   end)
@@ -379,6 +432,10 @@ function sampleScreen.BButtonDown()
     sampleScreen.waitForButton = false
     sampleScreen.recTimer:reset()
     sampleScreen.recTimer:pause()
+    sampleScreen.waveformImage = gfx.image.new(400, 45)
+    sampleScreen.waveformAnimator = nil
+    sampleScreen.waveformLastXY = {0,20}
+
     state = "press A to arm..."
 
     snd.micinput.startListening()
@@ -429,7 +486,7 @@ keyboardScreen.origtext = ""
 
 function keyboardScreen.open(prompt,text,limit,callback)
   keyboardScreen.callback = callback
-  keyboardScreen.text = text
+  keyboardScreen.text = string.normalize(text)
   keyboardScreen.origtext = text
   keyboardScreen.prompt = prompt
   keyboardScreen.askingForOK = false
@@ -472,7 +529,7 @@ end
 
 function pd.keyboard.textChangedCallback()
   if #pd.keyboard.text <= keyboardScreen.limit then
-    keyboardScreen.text = pd.keyboard.text
+    keyboardScreen.text = string.normalize(pd.keyboard.text)
   else
     pd.keyboard.text = string.sub(pd.keyboard.text,1,keyboardScreen.limit)
   end
@@ -498,7 +555,9 @@ end
 
 
 settingsScreen = {}
+settingsScreen.subMenu = ""
 settingsScreen.oldUpdate = nil
+settingsScreen.animator = nil
 settingsScreen.updateOutputs = (function()
   if settings["output"] < 3 then
     settings["output"] += 1
@@ -524,22 +583,32 @@ function settingsScreen.open()
   settingsList:setSelectedRow(1)
   settingsList:scrollToRow(1)
 
+  settingsScreen.animator = gfx.animator.new(200, 200, 0, pd.easingFunctions.outQuart)
+
   pd.inputHandlers.push(settingsScreen,true)
   settingsScreen.oldUpdate = pd.update
   pd.update = settingsScreen.update
 end
 
 function settingsScreen.update()
-  gfx.clear()
+  if settingsList.needsDisplay or settingsScreen.animator:ended() == false 
+  then
+    gfx.clear()
+    settingsList:drawInRect(settingsScreen.animator:currentValue(),0,400,240)
 
-  settingsList:drawInRect(0,0,400,240)
-  fnt8x8:drawTextAligned("settings",200,0,align.center)
-  fnt8x8:drawTextAligned("cs-16 version "..pd.metadata.version..", build "..pd.metadata.buildNumber,200,231,align.center)
+    if settingsScreen.subMenu == "" then
+      fnt8x8:drawTextAligned("settings",200,0,align.center)
+    else
+      fnt8x8:drawTextAligned("settings/"..string.sub(settingsScreen.subMenu,1,#settingsScreen.subMenu-1),200,0,align.center)
+    end
+    fnt8x8:drawTextAligned("cs-16 version "..pd.metadata.version..", build "..pd.metadata.buildNumber,200,231,align.center)
+  end
 
   pd.timer.updateTimers()
 end
 
 function settingsScreen.close()
+  settingsScreen.animator = nil
   pd.inputHandlers.pop()
   pd.update = settingsScreen.oldUpdate
 
@@ -555,89 +624,243 @@ function settingsScreen.upButtonDown()
 end
 
 function settingsScreen.leftButtonDown()
-  if settingsList:getSelectedRow() == 3 then
-    settings["cranksens"] = table.cycle(crankSensList, settings["cranksens"],true)
-  elseif settingsList:getSelectedRow() == 5 then
+  if settingsList:getSelectedRow() == 3 and settingsScreen.subMenu == "general/" then
     settingsScreen.updateOutputs()
+  elseif settingsList:getSelectedRow() == 4 and settingsScreen.subMenu == "general/" then
+    settings["cranksens"] = table.cycle(crankSensList, settings["cranksens"],true)
   end
   settingsScreen.updateSettings()
 end
 
 function settingsScreen.rightButtonDown()
-  if settingsList:getSelectedRow() == 3 then
-    settings["cranksens"] = table.cycle(crankSensList, settings["cranksens"])
-  elseif settingsList:getSelectedRow() == 5 then
+  if settingsList:getSelectedRow() == 3 and settingsScreen.subMenu == "general/" then
     settingsScreen.updateOutputs()
+  elseif settingsList:getSelectedRow() == 4 and settingsScreen.subMenu == "general/" then
+    settings["cranksens"] = table.cycle(crankSensList, settings["cranksens"])
   end
   settingsScreen.updateSettings()
 end
 
 function settingsScreen.BButtonDown()
-  settingsScreen.close()
+  if settingsScreen.subMenu == "" then
+    settingsScreen.close()
+  else
+    local oldmenu = settingsScreen.subMenu
+    settingsScreen.subMenu = ""
+    settingsScreen.updateSettings()
+    settingsList:setSelectedRow(table.indexOfElement(settingsList:get(), oldmenu))
+    settingsScreen.animator = gfx.animator.new(200, -200, 0, pd.easingFunctions.outQuart)
+  end
 end
 
 function settingsScreen.AButtonDown()
   local row = settingsList:getSelectedRow()
-  if row == 1 then
-    settings["dark"] = not settings["dark"]
-    pd.display.setInverted(settings["dark"])
-  elseif row == 2 then
-    settings["playonload"] = not settings["playonload"]
-  elseif row == 3 then
-    settings["cranksens"] = table.cycle(crankSensList, settings["cranksens"])
-  elseif row == 4 then
-    keyboardScreen.open("enter new author name:",settings["author"],15,function(t)
-      if t ~= "_EXITED_KEYBOĀRD" then
-        settings["author"] = t
-        if songdir == "temp/" then
-          songAuthor = t
+  local text = settingsListContents[settingsList:getSelectedRow()]
+  
+  local refresh = true
+
+  if settingsScreen.subMenu == "" then
+    settingsScreen.subMenu = text
+    settingsList:setSelectedRow(1)
+    settingsScreen.animator = gfx.animator.new(200, 200, 0, pd.easingFunctions.outQuart)
+  else
+    if text == "*Ā*" then
+      local oldmenu = settingsScreen.subMenu
+      settingsScreen.subMenu = ""
+      settingsScreen.updateSettings()
+      settingsList:setSelectedRow(table.indexOfElement(settingsList:get(), oldmenu))
+      settingsScreen.animator = gfx.animator.new(200, -200, 0, pd.easingFunctions.outQuart)
+      refresh = false
+    end
+
+    if settingsScreen.subMenu == "ui/" then
+      if row == 2 then
+        settings["dark"] = not settings["dark"]
+        pd.display.setInverted(settings["dark"])
+      elseif row == 3 then
+        if settings["visualizer"] < 3 then
+          settings["visualizer"] += 1
+        else
+          settings["visualizer"] = 0
         end
-        settingsScreen.updateSettings()
-      end
-    end)
-  elseif row == 5 then
-    settingsScreen.updateOutputs()
-  elseif row == 6 then
-    settings["stoponsample"] = not settings["stoponsample"]
-  elseif row == 7 then
-    settings["stopontempo"] = not settings["stopontempo"]
-  elseif row == 8 then
-    settings["savewavs"] = not settings["savewavs"]
-  elseif row == 9 then
-    settings["visualizer"] = not settings["visualizer"]
-  elseif row == 10 then
-    settings["num/max"] = not settings["num/max"]
-  elseif row == 11 then
-    if settings["pmode"] == false then
-      messageBox.open("\n\nwarning!\n\nrunning cs-16 at 50fps will reduce your battery life, but improve performance.\n\nare you sure you want to enable this?\n\na = yes, b = no", function(ans)
-        if ans == "yes" then
+      elseif row == 4 then
+        settings["num/max"] = not settings["num/max"]
+      elseif row == 5 then
+        settings["showNoteNames"] = not settings["showNoteNames"]
+      elseif row == 6 then
+        settings["screenAnimation"] = not settings["screenAnimation"]
+      elseif row == 7 then
+        settings["useSystemFont"] = not settings["useSystemFont"]
+        if settings["useSystemFont"] == true then
+          fnt = gfx.getSystemFont()
+        else
+          fnt = gfx.font.new("fnt/modified-tron")
+        end
+        gfx.setFont(fnt)
+      elseif row == 8 then
+        if settings["pmode"] == false then
+          messageBox.open("\n\nwarning!\n\nrunning cs-16 at 50fps will reduce your battery life, but improve performance.\n\nare you sure you want to enable this?\n\na = yes, b = no", function(ans)
+            if ans == "yes" then
+              settings["pmode"] = not settings["pmode"]
+              if settings["pmode"] == true then
+                pd.display.setRefreshRate(50)
+              else
+                pd.display.setRefreshRate(30)
+              end
+            end
+            settingsScreen.updateSettings()
+          end)
+        else
           settings["pmode"] = not settings["pmode"]
-          if settings["pmode"] == true then
-            pd.display.setRefreshRate(50)
-          else
-            pd.display.setRefreshRate(30)
-          end
+          pd.display.setRefreshRate(30)
         end
-        settingsScreen.updateSettings()
-      end)
-    else
-      settings["pmode"] = not settings["pmode"]
-      pd.display.setRefreshRate(30)
+      end
+    elseif settingsScreen.subMenu == "behavior/" then
+      if row == 2 then
+        settings["playonload"] = not settings["playonload"]
+      elseif row == 3 then
+        settings["stoponsample"] = not settings["stoponsample"]
+      elseif row == 4 then
+        settings["stopontempo"] = not settings["stopontempo"]
+      elseif row == 5 then
+        settings["savewavs"] = not settings["savewavs"]
+      end
+    elseif settingsScreen.subMenu == "recording/" then
+      if row == 8 then
+        local quant = settings["recordQuantization"]
+        if quant == 1 then -- every #th note
+          settings["recordQuantization"] = 2
+        elseif quant == 2 then
+          settings["recordQuantization"] = 4
+        elseif quant == 4 then
+          settings["recordQuantization"] = 1
+        end
+      elseif row > 1 then
+        keyboardScreen.open("enter a new track number for this button (1-16):","",2,function(t)
+          local num = tonumber(t)
+          if num ~= nil then
+            if num > 0 and num < 17 then
+              if row == 2 then
+                settings["aRecTrack"] = num
+              elseif row == 3 then
+                settings["bRecTrack"] = num
+              elseif row == 4 then
+                settings["upRecTrack"] = num
+              elseif row == 5 then
+                settings["downRecTrack"] = num
+              elseif row == 6 then
+                settings["leftRecTrack"] = num
+              elseif row == 7 then
+                settings["rightRecTrack"] = num
+              end
+              settingsScreen.updateSettings()
+            end
+          end
+        end)
+      end
+    elseif settingsScreen.subMenu == "general/" then
+      if row == 2 then
+        keyboardScreen.open("enter new author name:",settings["author"],15,function(t)
+          if t ~= "_EXITED_KEYBOĀRD" then
+            settings["author"] = t
+            if songdir == "temp/" then
+              songAuthor = t
+            end
+            settingsScreen.updateSettings()
+          end
+        end)
+      elseif row == 3 then
+        settingsScreen.updateOutputs()
+      elseif row == 4 then
+        settings["cranksens"] = table.cycle(crankSensList, settings["cranksens"])
+      elseif row == 5 then
+        creditsScreen.open()
+      end
+    elseif settingsScreen.subMenu == "sampling/" then
+      if row == 2 then
+        settings["sample16bit"] = not settings["sample16bit"]
+      elseif row == 3 then
+        settings["saveWaveforms"] = not settings["saveWaveforms"]
+      end
     end
   end
-  settingsScreen.updateSettings()
+
+  if refresh then
+    settingsScreen.updateSettings()
+  end
 end
 
 function settingsScreen.updateSettings()
-  local outputText = "speaker"
-  if settings["output"] == 1 then
-    outputText = "headset"
-  elseif settings["output"] == 2 then
-    outputText = "speaker, headset"
-  elseif settings["output"] == 3 then
-    outputText = "auto"
+  if settingsScreen.subMenu == "" then
+    settingsList:set({"general/","behavior/","recording/","sampling/","ui/"})
+  elseif settingsScreen.subMenu == "general/" then
+    local outputText = "speaker"
+    if settings["output"] == 1 then
+      outputText = "headset"
+    elseif settings["output"] == 2 then
+      outputText = "speaker, headset"
+    elseif settings["output"] == 3 then
+      outputText = "auto"
+    end
+
+    settingsList:set({
+      "*Ā*",
+      "author: "..settings["author"],
+      "output: "..outputText,
+      "crank speed: "..settings["cranksens"],
+      "credits..."
+    })
+  elseif settingsScreen.subMenu == "behavior/" then
+    settingsList:set({
+      "*Ā*",
+      "play on load: "..tostring(settings["playonload"]),
+      "stop if sampling: "..tostring(settings["stoponsample"]),
+      "tempo edit stop: "..tostring(settings["stopontempo"]),
+      "save .wav samples: "..tostring(settings["savewavs"])
+    })
+  elseif settingsScreen.subMenu == "recording/" then
+    settingsList:set({
+      "*Ā*",
+      "_Ⓐ_ button track: "..tostring(settings["aRecTrack"]),
+      "_Ⓑ_ button track: "..tostring(settings["bRecTrack"]),
+      "_⬆️_ button track: "..tostring(settings["upRecTrack"]),
+      "_⬇️_ button track: "..tostring(settings["downRecTrack"]),
+      "_⬅️_ button track: "..tostring(settings["leftRecTrack"]),
+      "_➡️_ button track: "..tostring(settings["rightRecTrack"]),
+      "quantization: "..tostring(settings["recordQuantization"])
+    })
+  elseif settingsScreen.subMenu == "sampling/" then
+    local format = "16 bit"
+    if settings["sample16bit"] == false then
+      format = "8 bit"
+    end
+    settingsList:set({
+      "*Ā*",
+      "sample format: "..format,
+      "save waveforms: "..tostring(settings["saveWaveforms"])
+    })
+  elseif settingsScreen.subMenu == "ui/" then
+    local vistext = "both"
+
+    if settings["visualizer"] == 0 then
+      vistext = "none"
+    elseif settings["visualizer"] == 1 then
+      vistext = "notes"
+    elseif settings["visualizer"] == 2 then
+      vistext = "sine"
+    end
+
+    settingsList:set({
+      "*Ā*",
+      "dark mode: "..tostring(settings["dark"]),
+      "visualizer: "..vistext,
+      "show number/total: "..tostring(settings["num/max"]),
+      "show note names: "..tostring(settings["showNoteNames"]),
+      "animate scrn move: "..tostring(settings["screenAnimation"]),
+      "use system font: "..tostring(settings["useSystemFont"]),
+      "50fps: "..tostring(settings["pmode"])
+    })
   end
-  settingsList:set({"dark mode: "..tostring(settings["dark"]),"play on load: "..tostring(settings["playonload"]),"crank speed: "..settings["cranksens"],"author: "..settings["author"],"output: "..outputText,"stop if sampling: "..tostring(settings["stoponsample"]),"tempo edit stop: "..tostring(settings["stopontempo"]),"save .wav samples: "..tostring(settings["savewavs"]),"visualizer: "..tostring(settings["visualizer"]),"show number/total: "..tostring(settings["num/max"]),"50fps: "..tostring(settings["pmode"])})
   saveSettings()
 end
 
@@ -651,20 +874,39 @@ sampleEditScreen.changeVal = 1000
 sampleEditScreen.sampleLen = 0
 sampleEditScreen.trim = {0,0}
 sampleEditScreen.side = 1 -- 1 = begin, 2 = end
+sampleEditScreen.ctrPixel = 0
 
-function sampleEditScreen.open(sample, callback)
+function sampleEditScreen.open(sample, callback, image)
   sampleEditScreen.sample = sample
+  sampleEditScreen.sampleImg = image
   sampleEditScreen.editedSample = nil
   sampleEditScreen.callback = callback
   sampleEditScreen.changeVal = 1000
   sampleEditScreen.trim = {0,0}
   sampleEditScreen.side = 1
 
+  if image ~= nil then
+    local done = false
+    for x = 400, 0, -1 do
+      for y = 40, 0, -1 do
+        if image:sample(x, y) == gfx.kColorBlack then
+          sampleEditScreen.ctrPixel = 400-(x/2)
+          done = true
+          break
+        end
+      end
+      if done then
+        break
+      end
+    end
+  end
+
   sampleEditScreen.sampleLen = math.round(sample:getLength()*44100,0)
 
   sampleEditScreen.trim[2] = sampleEditScreen.sampleLen
 
   sampleEditScreen.editedSample = sampleEditScreen.sample:getSubsample(sampleEditScreen.trim[1],sampleEditScreen.trim[2])
+  sampleEditScreen.samplePlayer = snd.sampleplayer.new(sampleEditScreen.editedSample)
 
   pd.inputHandlers.push(sampleEditScreen,true)
   sampleEditScreen.oldUpdate = pd.update
@@ -675,16 +917,30 @@ function sampleEditScreen.open(sample, callback)
   sample:play()
 end
 
-function sampleEditScreen.update()
+function sampleEditScreen.update() -- TODO: stop animation timer when the sample has finished playing, and figure out where the line should start from trim
   local sidetext = "start"
   gfx.clear()
   local crank = pd.getCrankTicks(settings["cranksens"])
+  local side = sampleEditScreen.side
 
   if crank ~= 0 then
-    sampleEditScreen.trim[sampleEditScreen.side] += sampleEditScreen.changeVal*crank
-    sampleEditScreen.trim[sampleEditScreen.side] = math.normalize(sampleEditScreen.trim[sampleEditScreen.side],0,sampleEditScreen.sampleLen)
+    local otherside = 1 -- IS THAT A MINECRAFT REFERENCE????? :OOOO
+    sampleEditScreen.trim[side] += sampleEditScreen.changeVal*crank
+    sampleEditScreen.trim[side] = math.normalize(sampleEditScreen.trim[side],0,sampleEditScreen.sampleLen)
+
+    if side == 1 then
+      otherside = 2
+      if sampleEditScreen.trim[side] >= sampleEditScreen.trim[otherside] then
+        sampleEditScreen.trim[side] = sampleEditScreen.trim[otherside] - 10
+      end
+    else
+      if sampleEditScreen.trim[side] <= sampleEditScreen.trim[otherside] then
+        sampleEditScreen.trim[side] = sampleEditScreen.trim[otherside] + 10
+      end
+    end
     sampleEditScreen.editedSample = sampleEditScreen.sample:getSubsample(sampleEditScreen.trim[1],sampleEditScreen.trim[2])
-    sampleEditScreen.editedSample:play()
+    sampleEditScreen.samplePlayer:setSample(sampleEditScreen.editedSample)
+    sampleEditScreen.samplePlayer:play()
   end
 
   if sampleEditScreen.side == 2 then
@@ -695,6 +951,10 @@ function sampleEditScreen.update()
   gfx.drawTextAligned("selected: "..sidetext,200,120,align.center)
   gfx.drawTextAligned("a to save, b to discard",200,210,align.center)
   fnt8x8:drawTextAligned("changing frames by "..sampleEditScreen.changeVal,200,231,align.center)
+
+  if sampleEditScreen.sampleImg ~= nil then
+    sampleEditScreen.sampleImg:drawCentered(sampleEditScreen.ctrPixel, 40)
+  end
 end
 
 function sampleEditScreen.rightButtonDown()
@@ -760,4 +1020,68 @@ function messageBox.close(ans)
   if messageBox.callback ~= nil then
     messageBox.callback(ans)
   end
+end
+
+creditsScreen = {}
+creditsScreen.oldUpdate = nil
+creditsScreen.current = 1
+
+function creditsScreen.open()
+  creditsScreen.current = 1
+  creditsScreen.updateText()
+
+  pd.inputHandlers.push(creditsScreen,true)
+  creditsScreen.oldUpdate = pd.update
+  pd.update = creditsScreen.update
+end
+
+function creditsScreen.update()
+  
+end
+
+function creditsScreen.updateText()
+  local text
+  gfx.clear()
+
+  if creditsScreen.current == 1 then -- used if statements so credits could be dynamic!
+    text = "\ncs-16 v"..pd.metadata.version.."\n\ndeveloped by nanobot567\n\n\n\n-- feature requesters --"
+  elseif creditsScreen.current == 2 then
+    text = "\nspecial thanks to...\n\n\n\n\n\n\n\n\n\n\nyou guys are awesome! :)"
+  end
+
+  gfx.drawTextInRect(text,0,0,400,240,nil,nil,align.center)
+
+  if creditsScreen.current == 1 then
+    gfx.drawTextInRect("\n\ndrhitchcockco - number/total setting\n\njustyouraveragehomie - waveform view, live record, and much more!", 0, 128, 400, 240, nil, nil, align.center, fnt8x8)
+  elseif creditsScreen.current == 2 then
+    gfx.drawTextInRect("my family\nlilfigurative\ntrisagion media\nthe trisagion insurgence", 0, 48, 400, 240, nil, nil, align.center, fnt8x8)
+  elseif creditsScreen.current == 3 then
+    gfx.drawTextInRect("nanobot567: open source, forever.\n\n\n\nthe cs-16 font is a modified version of the 'Tron' font from idleberg's playdate arcade fonts (https://github.com/idleberg/playdate-arcade-fonts).\n\nall of the source code is under the mit license, and is available at https://is.gd/cs16m (capital letters) (https://github.com/nanobot567/cs-16).", 2, 0, 396, 240, nil, nil, align.center, fnt8x8)
+  end
+  gfx.drawTextInRect("credits - use left / right to navigate, B to exit", 0, 232, 400, 8, nil, nil, align.center, fnt8x8)
+end
+
+function creditsScreen.BButtonDown()
+  creditsScreen.close()
+end
+
+function creditsScreen.leftButtonDown()
+  if creditsScreen.current > 1 then
+    creditsScreen.current -= 1
+    creditsScreen.updateText()
+  end
+end
+
+function creditsScreen.rightButtonDown()
+  if creditsScreen.current < 3 then
+    creditsScreen.current += 1
+    creditsScreen.updateText()
+  else
+    creditsScreen.close()
+  end
+end
+
+function creditsScreen.close()
+  pd.inputHandlers.pop()
+  pd.update = creditsScreen.oldUpdate
 end

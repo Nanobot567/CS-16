@@ -8,6 +8,7 @@ import "CoreLibs/object"
 import "CoreLibs/crank"
 import "CoreLibs/timer"
 import "CoreLibs/keyboard"
+import "CoreLibs/animator"
 
 stepCount = 32
 
@@ -47,6 +48,7 @@ screenMode = "pattern"
 currentElem = 1
 autonote = "none"
 songAuthor = settings["author"]
+elementAnimator = gfx.animator.new(0, 0, 0)
 
 pd.display.setInverted(settings["dark"])
 
@@ -63,9 +65,7 @@ finalListViewContents = nil
 
 pdmenu = pd.getSystemMenu()
 
-local autoNoteMenuItem, error = pdmenu:addOptionsMenuItem("autonote", {"none","1","2","4","8","16","32"}, "none", function(arg)
-  autonote = arg
-end)
+applyMenuItems("pattern")
 
 knobs = {Knob(55,65,8,true),Knob(150,65,21),Knob(180,65,21),Knob(210,65,21),Knob(240,65,21),Knob(215,135,11),Knob(255,135,11),Knob(336,135,25,true),Knob(55,205,11)}
 buttons = {Button(5,5,nil,nil,"back",true),Button(310,55,nil,nil,"toggle",true),Button(53-(fnt8x8:getTextWidth("select")/2),125,nil,nil,"select",true),Button(127,125,nil,nil,"play",true)}
@@ -87,7 +87,7 @@ function pd.update()
     crank = 0
   end
 
-  if crank ~= 0 then -- if cranked, then do action selected.
+  if crank ~= 0 and pattern.recording == false then -- if cranked, then do action selected.
     local b = nil
     if crank == -1 then
       b = true
@@ -147,6 +147,7 @@ function pd.update()
       if screenMode == "pattern" then
         pd.inputHandlers.push(pattern, true)
       elseif screenMode == "track" then
+        instrument.copytrack = 0
         pd.inputHandlers.push(instrument, true)
       elseif screenMode == "song" then
         pd.inputHandlers.push(song, true)
@@ -159,6 +160,8 @@ function pd.update()
       end
 
       displayInfo("screen: "..screenMode..append,750)
+
+      screenAnim(b)
     elseif crankMode == "tempo" then
       seq:setTempo(math.max(2,math.min(64,seq:getTempo()+crank)))
       sinetimer.duration = 400-getTempoFromSPS(seq:getTempo())
@@ -182,7 +185,7 @@ function pd.update()
         sinetimer:pause()
       end
 
-    elseif crankMode == "turn knob" and listviewContents[#listviewContents] == "Ā" then
+    elseif crankMode == "turn knob" and listviewContents[#listviewContents] == "*Ā*" then
       if allElems[currentElem]:isa(Knob) then
         local selRow = listview:getSelectedRow()
 
@@ -240,7 +243,7 @@ function pd.update()
     drawCursor()
 
     if autonote ~= "none" then
-      gfx.drawTextAligned("aĂ: "..autonote,400,222,align.right)
+      gfx.drawTextAligned("a*Ă*: "..autonote,400,222,align.right)
     end
 
     gfx.drawText(currentSeqStep,0,222)
@@ -248,11 +251,11 @@ function pd.update()
 
   elseif screenMode == "track" then
     local selRow = listview:getSelectedRow()
-    if listviewContents[1] ~= "Ā" then
+    if listviewContents[1] ~= "*Ā*" then
       listview:drawInRect(0, 0, 400, 240)
       --fnt8x8:drawTextAligned("tracks",200,0,align.center)
       if instrument.allMuted == true then
-        gfx.drawText("ć",383,223)
+        gfx.drawText("*ć*",383,223)
       end
     else
       synthset:draw(0,0)
@@ -271,18 +274,22 @@ function pd.update()
 
       for i = 1, #allElems, 1 do
         local sel = nil
+        local prs = nil
         if i == currentElem then
           sel = true
+          if pd.buttonIsPressed("a") then
+            prs = true
+          end
         end
 
-        allElems[i]:draw(sel)
+        allElems[i]:draw(sel, prs)
       end
 
       fnt8x8:drawTextAligned(selRow.."-"..trackNames[selRow],400,231,align.right)
     end
   elseif screenMode == "song" then
     local curStep = seq:getCurrentStep()
-    local metronome = {"Ĉ", "ĉ", "Ċ", "ĉ"}
+    local metronome = {"*Ĉ*", "*ĉ*", "*Ċ*", "*ĉ*"}
     local curMet = metronome[1]
 
     if (curStep - 1) % 4 < 4 then
@@ -292,21 +299,23 @@ function pd.update()
     local toDraw = "no name"
 
     if songdir ~= "temp/" then
-      toDraw = string.split(songdir,"/")[#string.split(songdir,"/")-1]
+      toDraw = string.normalize(string.split(songdir,"/")[#string.split(songdir,"/")-1])
     end
     gfx.drawTextInRect(toDraw.." by "..songAuthor,0,0,400,240,nil,nil,align.center)
 
-    if settings["visualizer"] then
+    if settings["visualizer"] >= 2 then
       gfx.setLineWidth(2)
-      gfx.drawSineWave(0,120,405,120,stepCount/2,stepCount/2,math.max(10,400-getTempoFromSPS(seq:getTempo())),sinetimer.currentTime) -- TODO: visualizer in later update!
+      gfx.drawSineWave(0,120,405,120,stepCount/2,stepCount/2,math.max(10,400-getTempoFromSPS(seq:getTempo())),sinetimer.currentTime)
       gfx.setLineWidth(1)
     end
 
-    for i=1, 16 do
-      if instrumentTable[i]:isPlaying() then
-        gfx.setColor(gfx.kColorXOR)
-        gfx.fillRoundRect((i*25)-22,110,20,20,2)
-        gfx.setColor(gfx.kColorBlack)
+    if settings["visualizer"] == 1 or settings["visualizer"] == 3 then
+      for i=1, 16 do
+        if instrumentTable[i]:isPlaying() then
+          gfx.setColor(gfx.kColorXOR)
+          gfx.fillRoundRect((i*25)-22,110,20,20,2)
+          gfx.setColor(gfx.kColorBlack)
+        end
       end
     end
 
@@ -314,16 +323,21 @@ function pd.update()
     gfx.drawText(stepCount.." steps", 0, 222)
   end
 
+  if elementAnimator:ended() == false then
+    pd.display.setOffset(elementAnimator:currentValue(),0)
+  end
+
   if textTimer ~= nil and textTimer.active == true then
     local sizex,sizey = gfx.getTextSize(textTimerText)
-    local rectx,recty,rectw,recth = (200-(sizex/2))-2,109,sizex+6,sizey+6
-
+    local offsetx, offsety = pd.display.getOffset()
+    local rectx,recty,rectw,recth = (200-(sizex/2))-2-offsetx,109,sizex+6,sizey+6
+    
     gfx.fillRect(rectx-2,recty-2,rectw,recth)
     gfx.setColor(gfx.kColorWhite)
     gfx.fillRect(rectx,recty,rectw,recth)
     gfx.setColor(gfx.kColorBlack)
     gfx.drawRect(rectx,recty,rectw,recth)
-    gfx.drawTextAligned(textTimerText,200,111,align.center)
+    gfx.drawTextAligned(textTimerText,200-offsetx,111,align.center)
   end
 
   pd.timer.updateTimers()

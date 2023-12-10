@@ -27,6 +27,8 @@ crankModesList = {
 }
 
 fnt = gfx.font.new("fnt/modified-tron")
+gfx.setFont(gfx.getSystemFont(), gfx.font.kVariantItalic)
+gfx.setFont(fnt, gfx.font.kVariantBold)
 gfx.setFont(fnt)
 
 fnt8x8 = gfx.font.new("fnt/modified-tron-8x8")

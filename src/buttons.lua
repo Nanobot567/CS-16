@@ -4,61 +4,92 @@ pattern = {}
 instrument = {}
 song = {}
 
+pattern.recording = false
+
 instrument.selectedInst = 0
 instrument.allMuted = false
 instrument.samplePreviewElems = {playdate.sound.track.new(), playdate.sound.sequence.new()}
 instrument.sample = playdate.sound.sample.new(5)
 
+instrument.copymode = "all"
+instrument.copytrack = 0
+
+instrument.movetrack = 0
+
 function pattern.AButtonDown()
-  if seq:isPlaying() then
-    seq:stop()
-    seq:goToStep(1)
-    sinetimer:pause()
+  if pattern.recording == true then
+    toggleNote(math.quantize(currentSeqStep, settings["recordQuantization"]), settings["aRecTrack"])
   else
-    seq:play()
-    sinetimer:reset()
-    sinetimer:start()
+    if seq:isPlaying() then
+      seq:stop()
+      seq:goToStep(1)
+      sinetimer:pause()
+    else
+      seq:play()
+      sinetimer:reset()
+      sinetimer:start()
+    end
   end
 end
 
 function pattern.BButtonDown()
-  crankMode = table.cycle(crankModes,crankMode)
-  local append = ""
-  if settings["num/max"] == true then
-    append = " - "..table.find(crankModes,crankMode).."/"..#crankModes  
+  if pattern.recording == true then
+    toggleNote(math.quantize(currentSeqStep, settings["recordQuantization"]), settings["bRecTrack"])
+  else
+    crankMode = table.cycle(crankModes,crankMode)
+    local append = ""
+    if settings["num/max"] == true then
+      append = " - "..table.find(crankModes,crankMode).."/"..#crankModes
+    end
+    displayInfo(crankMode..append)
   end
-  displayInfo(crankMode..append)
 end
 
 function pattern.upButtonDown()
-  if cursor[2] ~= 0 then
-    cursor[2] -= 1
+  if pattern.recording == true then
+    toggleNote(math.quantize(currentSeqStep, settings["recordQuantization"]), settings["upRecTrack"])
+  else
+    if cursor[2] ~= 0 then
+      cursor[2] -= 1
+    end
   end
 end
 
 function pattern.downButtonDown()
-  if (cursor[2]+1)*16 < stepCount then
-    cursor[2] += 1
+  if pattern.recording == true then
+    toggleNote(math.quantize(currentSeqStep, settings["recordQuantization"]), settings["downRecTrack"])
+  else
+    if (cursor[2]+1)*16 < stepCount then
+      cursor[2] += 1
+    end
   end
 end
 
 function pattern.rightButtonDown()
-  if cursor[1] ~= 15 then
-    cursor[1] += 1
+  if pattern.recording == true then
+    toggleNote(math.quantize(currentSeqStep, settings["recordQuantization"]), settings["rightRecTrack"])
+  else
+    if cursor[1] ~= 15 then
+      cursor[1] += 1
+    end
   end
 end
 
 function pattern.leftButtonDown()
-  if cursor[1] ~= 0 then
-    cursor[1] -= 1
+  if pattern.recording == true then
+    toggleNote(math.quantize(currentSeqStep, settings["recordQuantization"]), settings["leftRecTrack"])
+  else
+    if cursor[1] ~= 0 then
+      cursor[1] -= 1
+    end
   end
 end
 
 function instrument.AButtonDown() -- sorry, "track" screen in manual is referred to as "instrument" in source code. silly me :P
   local selRow = listview:getSelectedRow()
-  if listviewContents[1] ~= "Ā" then
+  if listviewContents[1] ~= "*Ā*" then
     instrument.selectedInst = instrumentTable[selRow]
-    listview:set({"Ā"})
+    listview:set({"*Ā*"})
     knobs[1]:setClicks(table.find(waveNames,trackNames[selRow])-1)
 
     local adsr = instrumentADSRtable[selRow]
@@ -72,17 +103,7 @@ function instrument.AButtonDown() -- sorry, "track" screen in manual is referred
     knobs[8]:setClicks(instrumentTransposeTable[selRow])
     knobs[9]:setClicks(instrument.selectedInst:getVolume()*10)
   elseif currentElem == 1 then
-    local finalListViewContents = {}
-
-    for i = 1, #trackNames, 1 do
-      local append = ""
-      if tracksMutedTable[i] == true then
-        append = " ć"
-      end
-      table.insert(finalListViewContents, tostring(i).." - "..trackNames[i]..append)
-    end
-
-    listview:set(finalListViewContents)
+    instrument.updateList()
   elseif currentElem == 7 then
     instrumentLegatoTable[selRow] = not instrumentLegatoTable[selRow]
     instrument.selectedInst:setLegato(instrumentLegatoTable[selRow])
@@ -91,7 +112,15 @@ function instrument.AButtonDown() -- sorry, "track" screen in manual is referred
     if trackNames[listview:getSelectedRow()] == "smp" then
       mode = "newsmp"
     end
-    filePicker.open(function(file)
+    filePicker.open(function(data)
+      local file,image = nil, nil
+      if type(data) == "table" then
+        file = data[1]
+        image = data[2]
+      else
+        file = data
+      end
+
       local newSample,err
       if type(file) == "string" then
         newSample,err = snd.sample.new(file)
@@ -113,6 +142,11 @@ function instrument.AButtonDown() -- sorry, "track" screen in manual is referred
         if settings["savewavs"] == true then
           newSample:save("temp/"..listview:getSelectedRow()..".wav")
         end
+
+        if image ~= nil then
+          pd.datastore.writeImage(image, "temp/"..listview:getSelectedRow()..".pdi")
+        end
+
         displayInfo("loaded "..filename)
       elseif file == "none" then
         print("ERROR INTENTIONAL! No sample selected.")
@@ -155,7 +189,7 @@ end
 
 function instrument.BButtonDown()
   local cur,max = table.find(crankModes,crankMode),#crankModes
-  if listviewContents[1] == "Ā" then
+  if listviewContents[1] == "*Ā*" then
     crankMode = table.cycle(crankModes,crankMode)
   else
     crankMode = "screen"
@@ -170,7 +204,7 @@ function instrument.BButtonDown()
 end
 
 function instrument.upButtonDown()
-  if listviewContents[1] ~= "Ā" then
+  if listviewContents[1] ~= "*Ā*" then
     listview:selectPreviousRow()
   else
     if currentElem <= 6 then
@@ -186,7 +220,7 @@ function instrument.upButtonDown()
 end
 
 function instrument.downButtonDown()
-  if listviewContents[1] ~= "Ā" then
+  if listviewContents[1] ~= "*Ā*" then
     listview:selectNextRow()
   else
     if currentElem == 1 then
@@ -202,47 +236,56 @@ end
 
 function instrument.rightButtonDown()
   local selRow = listview:getSelectedRow()
-  if currentElem ~= #knobs+#buttons and listviewContents[1] == "Ā" then
+  if currentElem ~= #knobs+#buttons and listviewContents[1] == "*Ā*" then
     currentElem += 1
-  elseif listviewContents[1] ~= "Ā" then
+  elseif listviewContents[1] ~= "*Ā*" then
     tracksMutedTable[selRow] = not tracksMutedTable[selRow]
     tracks[selRow]:setMuted(tracksMutedTable[selRow])
     if tracksMutedTable[selRow] == true then
       instrumentTable[selRow]:stop()
     end
 
-    local append = ""
-    if tracksMutedTable[selRow] == true then
-      append = " ć"
-    end
-
-    listviewContents[selRow] = tostring(selRow).." - "..trackNames[selRow]..append
+    instrument.updateList()
   end
 end
 
 function instrument.leftButtonDown()
   local selRow = listview:getSelectedRow()
-  if currentElem ~= 1 and listviewContents[1] == "Ā"then
+  if currentElem ~= 1 and listviewContents[1] == "*Ā*" then
     currentElem -= 1
-  elseif listviewContents[1] ~= "Ā" then
+  elseif listviewContents[1] ~= "*Ā*" then
     instrument.allMuted = not instrument.allMuted
     local newVal = instrument.allMuted
 
     for i=1, #tracks do
       tracksMutedTable[i] = newVal
       tracks[i]:setMuted(newVal)
-      if newVal == true then
-        instrumentTable[i]:stop()
-      end
-
-      local append = ""
-      if tracksMutedTable[i] == true then
-        append = " ć"
-      end
-
-      listviewContents[i] = tostring(i).." - "..trackNames[i]..append
     end
+
+    instrument.updateList()
   end
+end
+
+function instrument.updateList()
+  local finalListViewContents = {}
+
+  for i = 1, #trackNames, 1 do
+    local append = ""
+    if tracksMutedTable[i] == true then
+      append = " *ć*"
+    end
+
+    if i == instrument.copytrack then
+      if tracksMutedTable[i] == true then
+        append = " *ćč*"
+      else
+        append = append.." *č*"
+      end
+    end
+    table.insert(finalListViewContents, tostring(i).." - "..trackNames[i]..append)
+  end
+
+  listview:set(finalListViewContents)
 end
 
 

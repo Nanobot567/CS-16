@@ -37,12 +37,28 @@ To edit the pitch of the note, cycle through the crank mode menu until you reach
 
 You can start or stop the sequence by pressing A.
 
+### recording
+
+If you would like to input notes in real time, there is a `record` function in CS-16. You can toggle recording via the `record` menu option while on the `pattern` screen.
+
+While in record mode, the `A`, `B`, `up`, `down`, `left`, and `right` buttons are mapped to tracks in the song. When pressed, a note is placed at that step in the corresponding track. If quantization is enabled (not 1), then each note you place will be quantized to the nearest multiple of the quantization value.
+
+![](assets/liverecord.gif)
+
 ### track
 
 ![](assets/track.png)
 ![](assets/track-2.png)
 
-On the `track` screen, you can edit the instruments of your tracks, mute tracks by pressing `right` in the track list, or mute/unmute all tracks by pressing `left`.
+On the `track` screen, you can edit the instruments of your tracks, mute tracks by pressing `right` in the track list, or mute/unmute all tracks by pressing `left`. 
+
+#### copying and pasting track data
+
+In the system menu, there are two options, `copy` and `cpy mode`. To copy a track, move to the track you would like to copy, then enter the system menu and select `copy`. Move to the track you'd like to copy to, then press `paste`. The `cpy mode` option controls what is pasted to the track, which can be either everything (`all`), just the instrument (`inst`), or just the pattern (`ptn`).
+
+![](assets/copypaste.gif)
+
+#### instrument editor
 
 To edit an instrument, select the track you want in the list. It will be marked with the number and the instrument type. Instrument types can be any of the following:
 
@@ -65,6 +81,8 @@ By turning the `WAV` knob, you can select the waveform that your track uses, but
 
 The `SHFT` module transposes every note in the current track. Its range is -24 to 24 semitones.
 
+#### sampling
+
 When you go to select a sample, you will arrive at a list, usually with four options within it. These options are as follows:
 
 1. `record sample` - here you can record a sample using the microphone. (ui pictured below)
@@ -81,9 +99,13 @@ Within the file picker, you can enter folders or select a file using `A`, and ex
 
 If you have already selected a sample, however, there will be an extra option in the list: `edit sample`. In the `edit sample` screen, you can trim your samples. Pressing `left` or `right` changes the selected side, and pressing `up` or `down` changes the interval at which you trim the sample using the crank.
 
+If you are editing a sample that was recorded with the Playdate's microphone, you will see a waveform above the start and end frame locations.
+
+> note: the location of the playtime marker may not be accurate.
+
 ![](assets/sampleedit.png)
 
-> note: double and triple check your sample before you save it, when you trim it you cannot revert to the original sound.
+> note: double and triple check your sample before you save it! when you trim it you cannot revert to the original sound.
 
 ### song
 
@@ -105,7 +127,11 @@ To add your own samples, follow these steps:
 	- Using FFMPEG: `ffmpeg -i input_file -c:a pcm_s16le output_file.wav`
         - to reduce file size, you can also add these flags: `-ac 1` (converts to mono) `-b:a 128k` (makes bitrate 128kbps [reduces audio quality slightly, you can go lower if you want])
 	- Using Audacity: File -> Export as WAV... -> Signed 16 bit PCM
-2. compile them using `pdc` from the [Playdate SDK](https://play.date/dev/) into a playdate PDX, which will convert the audio files into PDA files (i have provided a pre-made folder for this in `/assets/`. Simply place your .WAVs into that folder, run `pdc convert`, and grab your .PDAs from convert.pdx.)
+
+2. Now you can either...
+    - use [this converter](https://ejb.github.io/wav-pda-converter/) to convert the .wav to .pda
+    - compile them using `pdc` from the [Playdate SDK](https://play.date/dev/) into a playdate PDX, which will convert the audio files into PDA files (i have provided a pre-made folder for this in `/assets/`. Simply place your .WAVs into that folder, run `pdc convert`, and grab your .PDAs from convert.pdx.)
+  
 3. put your playdate into [data disk mode](https://help.play.date/games/backups/)
 4. drag the PDAs into the `Data/user.*****.com.nano.cs16/samples/` folder on your playdate (feel free to use folders to organize your samples, CS-16 supports them) and eject it when finished.
 
@@ -116,3 +142,14 @@ To manage your songs:
 1. put your playdate into [data disk mode](https://help.play.date/games/backups/)
 2. navigate to `Data/user.*****.com.nano.cs16/songs/`
 3. add, copy, delete, or rename your songs, then eject your playdate when you are done.
+
+### ways to improve performance
+
+All of these are things you can do to improve CS-16's performance and reduce frame drops.
+
+- In `settings/ui/`...
+    - Disable `visualizer`.
+    - Disable `show note names`.
+    - Disable `animate scrn move`.
+    - Enable `50fps`.
+- Use lower quality samples (ex. lower bitrate)

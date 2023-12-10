@@ -54,6 +54,25 @@ function drawInsts()
     end
 
     notePlaced:fadedImage(notes[i]["velocity"],gfx.image.kDitherTypeBayer4x4):draw(stepx,stepy)
+
+    -- this goofy ahh solution is used instead of drawTextInRect.
+    -- mainly because...
+    -- a) drawTextInRect is VERY memory intensive
+    -- b) it's much faster
+
+    if settings["showNoteNames"] then
+      local text = MIDInotes[notes[i]["note"]-20]
+      local tagoroctave = string.sub(text, 2, 2)
+
+      if tagoroctave == "#" then
+        fnt8x8:drawText(string.sub(text, 1, 2), stepx+4, stepy+4)
+        fnt8x8:drawText(string.sub(text, 3, 3), stepx+4, stepy+12)
+      else
+        fnt8x8:drawText(string.sub(text, 1, 1), stepx+4, stepy+4)
+        fnt8x8:drawText(tagoroctave, stepx+4, stepy+12)
+      end
+      --gfx.drawTextInRect(MIDInotes[notes[i]["note"]-20], stepx+4, stepy+4, 16, 20, nil, nil, nil, fnt8x8)
+    end
   end
 end
 
@@ -148,6 +167,41 @@ function modifyNote(note, attrib, val, step)
   ::continue::
 end
 
+function math.nearest(table, number)
+    local smallestSoFar, smallestIndex
+    for i, y in ipairs(table) do
+        if not smallestSoFar or (math.abs(number-y) <= smallestSoFar) then
+            smallestSoFar = math.abs(number-y)
+            smallestIndex = i
+        end
+    end
+    return smallestIndex, table[smallestIndex]
+end
+
+function math.quantize(step, quant)
+  if step % quant ~= 1 and quant ~= 1 then
+    local t = {}
+    for i = 1, stepCount do
+      if i % quant == 1 then
+        table.insert(t, i)
+      end
+    end
+    local index, value = math.nearest(t, step)
+    return value
+  end
+  return step
+end
+
+function screenAnim(back)
+  if settings["screenAnimation"] then
+    if back == true then
+      elementAnimator = gfx.animator.new(500, -25, 0, pd.easingFunctions.outQuint)
+    else
+      elementAnimator = gfx.animator.new(500, 25, 0, pd.easingFunctions.outQuint)
+    end
+  end
+end
+
 function getTempoFromSPS(steps) -- returns tempo from steps per second
   return (steps/4)*30
 end
@@ -169,6 +223,14 @@ function table.merge(t,t2)
   return t
 end
 
+function string.normalize(str)
+  return string.gsub(string.gsub(str, "_", "__"),"%*","%*%*")
+end
+
+function string.unnormalize(str)
+  return string.gsub(string.gsub(str,"__","_"),"%*%*","%*")
+end
+
 function displayInfo(text, time)
   local ms = 1000
   if time ~= nil then
@@ -183,17 +245,24 @@ function math.round(num, numDecimalPlaces)
   return math.floor(num * mult + 0.5) / mult
 end
 
-function toggleNote(step)
-  local notes = selectedTrack:getNotes()
+function toggleNote(step, track)
+  local notes
+  local trackObj
+  if track == nil then
+    trackObj = selectedTrack
+  else
+    trackObj = tracks[track]
+  end
+  notes = trackObj:getNotes()
 
   for i = 1, #notes, 1 do
     if notes[i]["step"] == step then
-      selectedTrack:removeNote(step, notes[i]["note"])
+      trackObj:removeNote(step, notes[i]["note"])
       goto continue
     end
   end
 
-  selectedTrack:addNote(step, 60, 1)
+  trackObj:addNote(step, 60, 1)
   ::continue::
 end
 
@@ -236,6 +305,8 @@ function buildSave(name)
         print(err)
       end
       smp:save("songs/"..name.."/"..v)
+    elseif string.sub(v, #v-2) == "pdi" then
+      pd.datastore.writeImage(pd.datastore.readImage("temp/"..v), "songs/"..name.."/"..v)
     end
   end
 
@@ -275,6 +346,12 @@ function loadSave(name)
       instrumentTable[i]:setWaveform(WAVE_SIN)
       instrumentTable[i]:setWaveform(smp)
       smp:save("temp/"..i..".pda")
+
+      local sampleImage = pd.datastore.readImage(name..i..".pdi")
+      if sampleImage ~= nil then
+        pd.datastore.writeImage(sampleImage, "temp/"..i..".pdi")
+      end
+      
       if settings["savewavs"] == true then
         smp:save("temp/"..i..".wav")
       end
@@ -323,11 +400,28 @@ end
 function loadSettings()
   local data = pd.datastore.read("settings")
   if data ~= nil then
+    for k,v in pairs(settings) do
+      if data[k] == nil then
+        data[k] = v
+      elseif type(data[k]) ~= type(v) then
+        data[k] = v
+      end
+    end
+
     if data["pmode"] == true then
       pd.display.setRefreshRate(50)
     else
       pd.display.setRefreshRate(30)
     end
+
+    if data["useSystemFont"] == true then
+      fnt = gfx.getSystemFont()
+    else
+      fnt = gfx.font.new("fnt/modified-tron")
+    end
+    
+    gfx.setFont(fnt)
+
     return data
   end
   return settings
@@ -357,9 +451,9 @@ function applyMenuItems(mode)
       end
       keyboardScreen.open("song name:",startname,20,function(name)
         if name ~= "_EXITED_KEYBOĀRD" then -- this is such a lame solution, but it works!
-          buildSave(name)
+          buildSave(string.unnormalize(name))
           displayInfo("saved song "..name)
-          songdir = "/songs/"..name.."/ (song)"
+          songdir = "/songs/"..string.unnormalize(name).."/ (song)"
         end
         applyMenuItems("song")
       end)
@@ -368,6 +462,7 @@ function applyMenuItems(mode)
       pdmenu:removeAllMenuItems()
       filePicker.open(function (name)
         if name ~= "none" then
+          name = string.unnormalize(name)
           pd.file.delete("temp/",true)
           pd.file.mkdir("temp/")
 
@@ -381,7 +476,7 @@ function applyMenuItems(mode)
             autonote = arg
           end)
           songdir = name
-          displayInfo("loaded song "..string.split(name,"/")[#string.split(name,"/")-1])
+          displayInfo("loaded song "..string.normalize(string.split(name,"/")[#string.split(name,"/")-1]))
 
           if settings["playonload"] == true then
             seq:play()
@@ -402,5 +497,100 @@ function applyMenuItems(mode)
     local autoNoteMenuItem, error = pdmenu:addOptionsMenuItem("autonote", {"none","1","2","4","8","16","32"}, autonote, function(arg)
       autonote = arg
     end)
+    local recordMenuItem, error = pdmenu:addMenuItem("record")
+    recordMenuItem:setCallback(function()
+      if recordMenuItem:getTitle() == "record" then
+        pattern.recording = true
+        if not seq:isPlaying() then
+          seq:play()
+          sinetimer:reset()
+          sinetimer:start()
+        end
+        recordMenuItem:setTitle("stop record")
+        metronomeTrack:setMuted(false)
+      else
+        pattern.recording = false
+        recordMenuItem:setTitle("record")
+        metronomeTrack:setMuted(true)
+      end
+    end)
+  elseif mode == "track" then
+    local copyMenuItem, error = pdmenu:addMenuItem("copy")
+    local copyModeMenuItem, error = pdmenu:addOptionsMenuItem("cpy mode", {"all", "inst", "ptn"}, "all", function(arg)
+      instrument.copymode = arg
+    end)
+    copyMenuItem:setCallback(function()
+      if instrument.copytrack ~= 0 then
+        local doInst = false
+        local doPattern = false
+        
+        if instrument.copymode == "all" then
+          doInst = true
+          doPattern = true
+        elseif instrument.copymode == "inst" then
+          doInst = true
+        else
+          doPattern = true
+        end
+
+        local row = listview:getSelectedRow()
+        local track = instrument.copytrack
+        instrument.copytrack = 0
+
+        if doPattern then
+          tracks[row]:setNotes(tracks[track]:getNotes())
+          if seq:isPlaying() then
+            seq:stop()
+            seq:play()
+            sinetimer:reset()
+          end
+        end
+
+        if doInst then
+          trackNames[row] = trackNames[track]
+          if trackNames[row] == "smp" then
+            seq:stop()
+            local smp = snd.sample.new("temp/"..track..".pda")
+            smp:save("temp/"..row..".pda")
+            smp = snd.sample.new("temp/"..row..".pda")
+            instrumentTable[row]:setWaveform(WAVE_SIN)
+            instrumentTable[row]:setWaveform(smp)
+            seq:allNotesOff()
+            seq:play()
+          else
+            instrumentTable[row]:setWaveform(waveTable[table.indexOfElement(waveNames, trackNames[row])])
+          end
+
+          tracks[row]:setInstrument(instrumentTable[row]:copy())
+
+          instrumentADSRtable[row] = table.deepcopy(instrumentADSRtable[track])
+          instrumentParamTable[row] = table.deepcopy(instrumentParamTable[track])
+          instrumentLegatoTable[row] = instrumentLegatoTable[track]
+          instrumentTransposeTable[row] = instrumentTransposeTable[track]
+
+          local adsr = instrumentADSRtable[row]
+
+          instrumentTable[row]:setADSR(adsr[1],adsr[2],adsr[3],adsr[4])
+          instrumentTable[row]:setLegato(instrumentLegatoTable[row])
+          instrumentTable[row]:setParameter(1, instrumentParamTable[track][1])
+          instrumentTable[row]:setParameter(2, instrumentParamTable[track][2])
+          tracks[row]:getInstrument():setTranspose(instrumentTransposeTable[row])
+          instrumentTable[row]:setVolume(instrumentTable[track]:getVolume())
+        end
+
+        instrument.updateList()
+
+        copyMenuItem:setTitle("copy")
+
+        displayInfo("pasted to track "..row)
+      else
+        instrument.copytrack = listview:getSelectedRow()
+        instrument.updateList()
+        copyMenuItem:setTitle("paste")
+
+        displayInfo("copied track "..instrument.copytrack)
+      end
+    end)
   end
+  instrument.copytrack = 0
 end
