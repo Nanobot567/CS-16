@@ -101,8 +101,6 @@ If you have already selected a sample, however, there will be an extra option in
 
 If you are editing a sample that was recorded with the Playdate's microphone, you will see a waveform above the start and end frame locations.
 
-> note: the location of the playtime marker may not be accurate.
-
 ![](assets/sampleedit.png)
 
 > note: double and triple check your sample before you save it! when you trim it you cannot revert to the original sound.
