@@ -547,21 +547,23 @@ function applyMenuItems(mode)
         end
 
         if doInst then
+          seq:stop()
+          seq:allNotesOff()
+
           trackNames[row] = trackNames[track]
           if trackNames[row] == "smp" then
-            seq:stop()
             local smp = snd.sample.new("temp/"..track..".pda")
             smp:save("temp/"..row..".pda")
             smp = snd.sample.new("temp/"..row..".pda")
             instrumentTable[row]:setWaveform(WAVE_SIN)
             instrumentTable[row]:setWaveform(smp)
-            seq:allNotesOff()
-            seq:play()
           else
-            instrumentTable[row]:setWaveform(waveTable[table.indexOfElement(waveNames, trackNames[row])])
+            local wv = waveTable[table.indexOfElement(waveNames, trackNames[row])]
+            instrumentTable[row] = instrumentTable[track]:copy()
+            instrumentTable[row]:setWaveform(wv)
           end
 
-          tracks[row]:setInstrument(instrumentTable[row]:copy())
+          tracks[row]:setInstrument(instrumentTable[row])
 
           instrumentADSRtable[row] = table.deepcopy(instrumentADSRtable[track])
           instrumentParamTable[row] = table.deepcopy(instrumentParamTable[track])
@@ -576,6 +578,8 @@ function applyMenuItems(mode)
           instrumentTable[row]:setParameter(2, instrumentParamTable[track][2])
           tracks[row]:getInstrument():setTranspose(instrumentTransposeTable[row])
           instrumentTable[row]:setVolume(instrumentTable[track]:getVolume())
+
+          seq:play()
         end
 
         instrument.updateList()
