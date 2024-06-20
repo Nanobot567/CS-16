@@ -36,5 +36,5 @@ run:
 
 release:
   just build
-  rm CS-16.pdx.zip
+  -rm CS-16.pdx.zip
   zip -rq CS-16.pdx.zip CS-16.pdx

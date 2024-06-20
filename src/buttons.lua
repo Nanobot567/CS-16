@@ -153,6 +153,8 @@ function instrument.AButtonDown() -- sorry, "track" screen in manual is referred
           filename = listview:getSelectedRow() .. ".pda"
         end
 
+        newSample:decompress()
+
         instrument.selectedInst:setWaveform(WAVE_SIN)
         instrument.selectedInst:setWaveform(newSample)
         trackNames[listview:getSelectedRow()] = "smp"
