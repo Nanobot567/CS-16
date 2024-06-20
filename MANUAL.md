@@ -1,9 +1,10 @@
 # CS-16 manual
 
-In CS-16, there are three main screens, each of which will be explored in this manual:
+In CS-16, there are four main screens, each of which will be explored in this manual:
 1. `pattern`
 2. `track`
-3. `song`
+3. `fx`
+4. `song`
 
 You can swap between these screens by pressing `B` until the text shown says `screen`, and then cranking. This "crank mode" menu will be accessed often as you use CS-16.
 
@@ -33,7 +34,7 @@ To make placing down and editing notes at intervals easier, there is an option i
 
 ![](assets/autonote.gif)
 
-To edit the pitch of the note, cycle through the crank mode menu until you reach `pitch`, then crank like you did for `note status`. Changing the track, velocity, and note length are done this same way.
+To edit the pitch of the note, cycle through the crank mode menu until you reach `pitch`, then crank like you did for `note status`. Changing the track, velocity, note length, and swing are done this same way.
 
 You can start or stop the sequence by pressing A.
 
@@ -42,6 +43,8 @@ You can start or stop the sequence by pressing A.
 If you would like to input notes in real time, there is a `record` function in CS-16. You can toggle recording via the `record` menu option while on the `pattern` screen.
 
 While in record mode, the `A`, `B`, `up`, `down`, `left`, and `right` buttons are mapped to tracks in the song. When pressed, a note is placed at that step in the corresponding track. If quantization is enabled (not 1), then each note you place will be quantized to the nearest multiple of the quantization value.
+
+> swing is applied when you press `stop record`.
 
 ![](assets/liverecord.gif)
 
@@ -57,6 +60,16 @@ On the `track` screen, you can edit the instruments of your tracks, mute tracks 
 In the system menu, there are two options, `copy` and `cpy mode`. To copy a track, move to the track you would like to copy, then enter the system menu and select `copy`. Move to the track you'd like to copy to, then press `paste`. The `cpy mode` option controls what is pasted to the track, which can be either everything (`all`), just the instrument (`inst`), or just the pattern (`ptn`).
 
 ![](assets/copypaste.gif)
+
+#### renaming tracks
+
+To rename one of your tracks, hover over the track you would like to rename, enter the system menu and select `rename`.
+
+To remove your custom track name, enter the `rename` keyboard, delete all of the characters, and press `OK`.
+
+> note: there is a 10-character limit.
+
+![](assets/rename.gif)
 
 #### instrument editor
 
@@ -99,21 +112,76 @@ Within the file picker, you can enter folders or select a file using `A`, and ex
 
 If you have already selected a sample, however, there will be an extra option in the list: `edit sample`. In the `edit sample` screen, you can trim your samples. Pressing `left` or `right` changes the selected side, and pressing `up` or `down` changes the interval at which you trim the sample using the crank.
 
-If you are editing a sample that was recorded with the Playdate's microphone, you will see a waveform above the start and end frame locations.
+If you are editing a sample that was recorded with the Playdate's microphone and you have enabled `settings / sampling / save waveforms`, you will see a waveform above the start and end frame locations.
 
 ![](assets/sampleedit.png)
 
 > note: double and triple check your sample before you save it! when you trim it you cannot revert to the original sound.
 
+### fx
+
+![](assets/fx.png)
+
+In the `fx` screen, you can apply punch-in effects to your pattern. Currently there are four effects (ordered clockwise, starting from the top):
+
+1. `TAPE`: high-pass and low-pass filters
+2. `BTC`: bitcrush
+3. `WTR`: low-pass filter
+4. `OVD`: overdrive
+
+While in this screen, press A to activate or deactivate punch-in. The word `ACTV!` will appear at the center of the screen when it's activated. Once activated, the d-pad buttons enable the corresponding effect when pressed, and disable when not.
+
+It is possible to "lock" your button presses! Enable the effects you would like to lock, then switch the crank mode to `lock effect`. Crank clockwise until you see a "lock" icon appear in the bottom left of your screen. To unlock effects, either crank counter-clockwise to unlock all of them, or press the corresponding d-pad button when punch-in is active.
+
+If you would like to change an effect intensity (signified by the decimal number next to the effect), first ensure that punch-in is deactivated. Then, change the crank mode to `effect intensity` and press the d-pad button according to the effect you would like to modify. You'll know you're good to go when there's a box around the effect text. Now just crank until you reach your desired value! Intensities range from 0 (off) to 1 (full effect).
+
+> note: this can be done while an effect is applied, allowing for some pretty fun live performance stuff!
+
 ### song
 
-![](assets/song.png)
+![](assets/songscreen.gif)
 
 In the `song` screen, you can view and modify your song's global options, such as the tempo and pattern length (these can be modified via the crank). Your song name and author name is displayed at the top.
 
 > IMPORTANT NOTE! currently, the tempo can only be changed by intervals of 7.5 because of a bug in Playdate OS. as soon as a fix is implemented, this message will be deleted. 
 
-Here you can also save and load your songs via the Playdate OS menu. In the menu, you can access and change CS-16 settings, such as dark mode, crank sensitivity, and the name used to sign your saved songs.
+Here you can also save and load your songs via the Playdate OS menu. If you select `load`, you can also perform file operations on your songs, such as renaming, deleting, and cloning. You can press `right` to view file metadata as well.
+
+![](assets/fileops.gif)
+
+In the system menu, you can also access and change CS-16 settings, such as dark mode, crank sensitivity, and the name used to sign your saved songs. A full list of settings is below.
+
+- `general/`
+	- `author` (text value, default anonymous)
+	- `output` (audio output. can be auto, speaker, headset, or speaker and headset)
+	- `crank speed`
+	- `credits`
+- `behavior/`
+	- `play on load` (play pattern immediately on song load)
+	- `stop if sampling` (stop the pattern if you are currently sampling audio)
+	- `tempo edit stop` (stop the pattern when tempo is modified)
+	- `save .wav samples` (alongside .pda audio, save .wav files when sampling)
+	- `crank docked screen` (which screen appears when the crank is docked. `none` disables changing the screen)
+- `recording/` (as in tapping in a pattern)
+	- (button) `button track` (when record is active, this button will correspond to this track)
+	- `quantization` (quantize recording, can be either off [1], every 16th note [2], or every 8th note [4])
+- `sampling/`
+	- `sample format` (16 bit or 8 bit)
+	- `save waveforms` (save waveform images along with audio)
+- `ui/`
+	- `dark mode`
+	- `visualizer` (song screen visualizer options)
+		- `sine wave` (sine wave where tempo is proportional to frequency and pattern length is proportional to amplitude)
+		- `notes` (displays track active statuses)
+		- `stars` (purely decorational, but looks pretty awesome lol)
+		- `--- external ---` (below this are custom visualizers)
+	- `show number / total` (display current crank mode number out of total)
+	- `show note names` (display note names in pattern [C#4, F3, etc.])
+	- `animate scrn move` (animate screen transitions)
+	- `use system font` (use an alternate font)
+	- `show log screens` (display log screens, causes some moderate slowdown at the cost of coolness)
+	- `fx screen vfx` (when an effect is active, apply the corresponding screen visual effect as well)
+	- `50fps` (50fps refresh rate)
 
 ## other information
 
@@ -141,13 +209,22 @@ To manage your songs:
 2. navigate to `Data/user.*****.com.nano.cs16/songs/`
 3. add, copy, delete, or rename your songs, then eject your playdate when you are done.
 
+> if you are sharing your songs on the internet, you can set your author name in `settings / general`!!
+
 ### ways to improve performance
 
 All of these are things you can do to improve CS-16's performance and reduce frame drops.
 
-- In `settings/ui/`...
-    - Disable `visualizer`.
+- In `settings / ui /`...
+    - Disable all `visualizer` elements.
     - Disable `show note names`.
     - Disable `animate scrn move`.
+    - Disable `fx screen vfx`.
     - Enable `50fps`.
 - Use lower quality samples (ex. lower bitrate)
+
+### custom visualizers
+
+I have a few custom visualizers in this repository under `visualizers` (and maybe you'll find another one on the internet somewhere??? idk haha). To import these into CS-16, check out the visualizer `building / importing` section in the [DEV document](DEV.md).
+
+> note: by default, imported visualizers are disabled. head to `settings / ui / visualizers` to enable them.

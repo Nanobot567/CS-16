@@ -21,22 +21,31 @@ WAVE_POD = snd.kWavePODigital
 WAVE_POV = snd.kWavePOVosim
 
 crankModesList = {
-  {"note status","pitch","length","velocity","track","screen"},
-  {"turn knob","screen"},
-  {"tempo","pattern length","screen"}
+  { "note status", "pitch", "length", "velocity", "swing", "track", "screen" },
+  { "turn knob", "screen" },
+  { "lock effect", "effect intensity", "screen" },
+  { "tempo", "pattern length", "screen" }
 }
 
+-- eggect
+
 fnt = gfx.font.new("fnt/modified-tron")
+fnt8x8 = gfx.font.new("fnt/modified-tron-8x8")
+
+rains1x = gfx.font.new("fnt/font-rains-1x")
+rains2x = gfx.font.new("fnt/font-rains-2x")
+
+rains1x:setLeading(2)
+-- rains2x:setLeading(2)
+
 gfx.setFont(gfx.getSystemFont(), gfx.font.kVariantItalic)
 gfx.setFont(fnt, gfx.font.kVariantBold)
 gfx.setFont(fnt)
 
-fnt8x8 = gfx.font.new("fnt/modified-tron-8x8")
-
 MIDInotes = {}
 
 for i = 1, 21, 1 do
-  table.insert(MIDInotes,"")
+  table.insert(MIDInotes, "")
 end
 
 MIDInotes = {
