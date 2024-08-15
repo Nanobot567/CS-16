@@ -69,8 +69,11 @@ local function ramonaUpdate(data)
 
   if data.settings["dark"] then
     gfx.setColor(gfx.kColorBlack)
-    gfx.fillRect(0, drawHeight, ramonaWidth, ramonaHeight)
+  else
+    gfx.setColor(gfx.kColorWhite)
   end
+
+  gfx.fillRect(0, drawHeight, ramonaWidth, ramonaHeight)
 
   gfx.setImageDrawMode(gfx.kDrawModeNXOR)
   if animateCheck1(data) then

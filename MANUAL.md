@@ -154,7 +154,8 @@ In the system menu, you can also access and change CS-16 settings, such as dark 
 - `general/`
 	- `author` (text value, default anonymous)
 	- `output` (audio output. can be auto, speaker, headset, or speaker and headset)
-	- `crank speed`
+	- `crank speed` (crank sensitivity)
+    - `folders > files` (folders should precede files in the file explorer)
 	- `credits`
 - `behavior/`
 	- `play on load` (play pattern immediately on song load)

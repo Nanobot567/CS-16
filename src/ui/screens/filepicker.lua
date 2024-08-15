@@ -45,9 +45,7 @@ function filePicker.open(callback, mode)
   filePicker.oldUpdate = pd.update
   pd.update = filePicker.update
 
-  filePickList:set(filePicker.modifyDirContents(pd.file.listFiles(currentPath)))
-  filePickList:setSelectedRow(1)
-  filePickList:scrollToRow(1)
+  filePicker.updateFiles()
 end
 
 function filePicker.update(force)
@@ -262,6 +260,16 @@ function filePicker.modifyDirContents(val)
     val[i] = string.normalize(val[i])
   end
 
+  if settings["foldersPrecedeFiles"] then
+    local tempVal = table.shallowcopy(val)
+
+    for i = #tempVal, 1, -1 do
+      if string.sub(tempVal[i], #tempVal[i] - 5) ~= "(song)" then
+        table.insert(val, 1, table.remove(val, table.indexOfElement(val, tempVal[i])))
+      end
+    end
+  end
+ 
   if currentPath ~= "/" then
     table.insert(val, 1, "*Ā*")
   elseif filePicker.mode ~= "song" then

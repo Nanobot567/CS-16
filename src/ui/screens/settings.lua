@@ -113,7 +113,7 @@ function settingsScreen.rightButtonDown()
     settingsScreen.updateOutputs()
   elseif row == 4 and settingsScreen.subMenu == "general/" then
     settings["cranksens"] = table.cycle(crankSensList, settings["cranksens"])
-  elseif row == 6 and settingsScreen.subMenu == "behavior/" then
+  elseif row == 5 and settingsScreen.subMenu == "behavior/" then
     settings["crankDockedScreen"] = table.cycle(crankDockList, settings["crankDockedScreen"])
   end
   settingsScreen.updateSettings()
@@ -188,7 +188,7 @@ function settingsScreen.AButtonDown()
       elseif row == 10 then
         if settings["50fps"] == false then
           messageBox.open(
-            "\n\nwarning!\n\nrunning cs-16 at 50fps will reduce your battery life, but improve performance.\n\nare you sure you want to enable this?\n\na = yes, b = no",
+            "warning!\n\nrunning cs-16 at 50fps will reduce your battery life, but improve performance.\n\nare you sure you want to enable this?\n\na = yes, b = no",
             function(ans)
               if ans == "yes" then
                 settings["50fps"] = not settings["50fps"]
@@ -219,8 +219,6 @@ function settingsScreen.AButtonDown()
       elseif row == 4 then
         settings["stopontempo"] = not settings["stopontempo"]
       elseif row == 5 then
-        settings["savewavs"] = not settings["savewavs"]
-      elseif row == 6 then
         settings["crankDockedScreen"] = table.cycle(crankDockList, settings["crankDockedScreen"])
       end
     elseif settingsScreen.subMenu == "recording/" then
@@ -272,6 +270,8 @@ function settingsScreen.AButtonDown()
       elseif row == 4 then
         settings["cranksens"] = table.cycle(crankSensList, settings["cranksens"])
       elseif row == 5 then
+        settings["foldersPrecedeFiles"] = not settings["foldersPrecedeFiles"]
+      elseif row == 6 then
         creditsScreen.open()
       end
     elseif settingsScreen.subMenu == "sampling/" then
@@ -279,6 +279,8 @@ function settingsScreen.AButtonDown()
         settings["sample16bit"] = not settings["sample16bit"]
       elseif row == 3 then
         settings["saveWaveforms"] = not settings["saveWaveforms"]
+      elseif row == 4 then
+        settings["savewavs"] = not settings["savewavs"]
       end
     end
   end
@@ -306,6 +308,7 @@ function settingsScreen.updateSettings()
       "author: " .. settings["author"],
       "output: " .. outputText,
       "crank speed: " .. settings["cranksens"],
+      "folders > files: " .. tostring(settings["foldersPrecedeFiles"]),
       "credits..."
     })
   elseif settingsScreen.subMenu == "behavior/" then
@@ -322,7 +325,6 @@ function settingsScreen.updateSettings()
       "play on load: " .. tostring(settings["playonload"]),
       "stop if sampling: " .. tostring(settings["stoponsample"]),
       "tempo edit stop: " .. tostring(settings["stopontempo"]),
-      "save .wav samples: " .. tostring(settings["savewavs"]),
       "crank dock screen: " .. tostring(screen)
     })
   elseif settingsScreen.subMenu == "recording/" then
@@ -344,7 +346,8 @@ function settingsScreen.updateSettings()
     settingsList:set({
       "*Ā*",
       "sample format: " .. format,
-      "save waveforms: " .. tostring(settings["saveWaveforms"])
+      "save waveforms: " .. tostring(settings["saveWaveforms"]),
+      "save .wav samples: " .. tostring(settings["savewavs"])
     })
   elseif settingsScreen.subMenu == "ui/" then
     settingsList:set({

@@ -32,7 +32,8 @@ settings = {
   ["screenAnimation"] = true,
   ["logscreens"] = true,
   ["fxvfx"] = false,
-  ["crankDockedScreen"] = "pattern"
+  ["crankDockedScreen"] = "pattern",
+  ["foldersPrecedeFiles"] = true
 }
 settings = loadSettings()
 saveSettings()
