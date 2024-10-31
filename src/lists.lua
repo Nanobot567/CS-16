@@ -15,7 +15,7 @@ function listview:drawCell(section, row, column, selected, x, y, width, height)
   else
     gfx.setImageDrawMode(gfx.kDrawModeNXOR)
   end
-  gfx.drawText(listviewContents[row], x + 4, y + 2, width, height, nil, "...", align.center)
+  gfx.drawText(listviewContents[row], x + 4, y + 2)
 end
 
 function listview:set(t)
@@ -42,7 +42,7 @@ function filePickList:drawCell(section, row, column, selected, x, y, width, heig
   else
     gfx.setImageDrawMode(gfx.kDrawModeNXOR)
   end
-  gfx.drawText(filePickListContents[row], x + 4, y + 2, width, height, nil, "...", align.center)
+  gfx.drawText(filePickListContents[row], x + 4, y + 2)
 end
 
 function filePickList:set(t)
@@ -69,7 +69,7 @@ function settingsList:drawCell(section, row, column, selected, x, y, width, heig
   else
     gfx.setImageDrawMode(gfx.kDrawModeNXOR)
   end
-  gfx.drawText(settingsListContents[row], x + 4, y + 2, width, height, nil, "...", align.center)
+  gfx.drawText(settingsListContents[row], x + 4, y + 2)
 end
 
 function settingsList:set(t)
