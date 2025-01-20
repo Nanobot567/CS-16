@@ -143,8 +143,6 @@ If you would like to change an effect intensity (signified by the decimal number
 
 In the `song` screen, you can view and modify your song's global options, such as the tempo and pattern length (these can be modified via the crank). Your song name and author name is displayed at the top.
 
-> IMPORTANT NOTE! currently, the tempo can only be changed by intervals of 7.5 because of a bug in Playdate OS. as soon as a fix is implemented, this message will be deleted. 
-
 Here you can also save and load your songs via the Playdate OS menu. If you select `load`, you can also perform file operations on your songs, such as renaming, deleting, and cloning. You can press `right` to view file metadata as well.
 
 ![](assets/fileops.gif)
@@ -160,8 +158,8 @@ In the system menu, you can also access and change CS-16 settings, such as dark 
 - `behavior/`
 	- `play on load` (play pattern immediately on song load)
 	- `stop if sampling` (stop the pattern if you are currently sampling audio)
+    - `precise tempo chg` (enables precise tempo editing [increment / decrement tempo by 0.1 instead of 1 when editing])
 	- `tempo edit stop` (stop the pattern when tempo is modified)
-	- `save .wav samples` (alongside .pda audio, save .wav files when sampling)
 	- `crank docked screen` (which screen appears when the crank is docked. `none` disables changing the screen)
 - `recording/` (as in tapping in a pattern)
 	- (button) `button track` (when record is active, this button will correspond to this track)
@@ -169,6 +167,7 @@ In the system menu, you can also access and change CS-16 settings, such as dark 
 - `sampling/`
 	- `sample format` (16 bit or 8 bit)
 	- `save waveforms` (save waveform images along with audio)
+	- `save .wav samples` (alongside .pda audio, save .wav files when sampling)
 - `ui/`
 	- `dark mode`
 	- `visualizer` (song screen visualizer options)

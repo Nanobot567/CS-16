@@ -86,7 +86,7 @@ function pd.update()
 
   local crank = 0
   if crankMode == "tempo" then
-    crank = pd.getCrankTicks(8)
+    crank = pd.getCrankTicks(10)
   elseif crankMode == "turn knob" then
     crank = pd.getCrankTicks(8)
   else
@@ -214,7 +214,15 @@ function pd.update()
 
       screenAnim(b)
     elseif crankMode == "tempo" then
-      seq:setTempo(math.max(16, math.min(512, seq:getTempo() + (crank * 8))))
+      local tm = getTempoFromSPS(seq:getTempo()) -- this is some goofy math but it works lol
+
+      if settings["smallerTempoIncrements"] then
+        tm = getSPSfromTempo(tm + (crank / 1.25))
+      else
+        tm = getSPSfromTempo(tm + (crank * 8))
+      end
+
+      seq:setTempo(math.max(16, math.min(512, tm)))
       sinetimer.duration = 400 - (getTempoFromSPS(seq:getTempo()) / 8)
       if seq:isPlaying() and settings["stopontempo"] then
         seq:stop()
@@ -337,6 +345,7 @@ function pd.update()
     local selRow = listview:getSelectedRow()
     if listviewContents[1] ~= "*Ā*" then
       if listview.needsDisplay or textTimer.timeLeft ~= 0 then
+        gfx.clear()
         listview:drawInRect(0, 0, 400, 240)
 
         if instrument.allMuted == true then
@@ -412,9 +421,8 @@ function pd.update()
     end
     gfx.drawTextInRect(toDraw .. " by " .. songAuthor, 0, 0, 400, 240, nil, nil, align.center)
 
-    gfx.drawTextAligned(curMet .. (getTempoFromSPS(seq:getTempo() / 8)), 400, 222, align.right)
+    gfx.drawTextAligned(curMet .. (math.round(getTempoFromSPS(seq:getTempo() / 8), 2)), 400, 222, align.right)
     gfx.drawText(math.floor(stepCount / 8) .. " steps", 0, 222)
-
 
     if settings["visualizer"]["sine"] then -- sine wave
       gfx.setLineWidth(2)

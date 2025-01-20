@@ -31,7 +31,9 @@ local speechOptions = {
   "we getting out of\nthe playdate with\nthis one.",
   "let. them. cook!!",
   "betcha didn't know\nthere's lore behind\ncs-16...",
-  "hopefully i don't\nsound like a\nbroken record, haha..."
+  "hopefully i don't\nsound like a\nbroken record, haha...",
+  "anyway, hope you've\n been doing\nalright!",
+  "man, it gets boring\nin here\nsometimes..."
 }
 local speech = ""
 local lastSpeech = "blannnnk"

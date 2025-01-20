@@ -38,3 +38,9 @@ release:
   just build
   -rm CS-16.pdx.zip
   zip -rq CS-16.pdx.zip CS-16.pdx
+
+  mv visualizers/ src/
+  pdc -q -sdkpath ~/Documents/PlaydateSDK/ src CS-16
+  mv src/visualizers .
+  -rm CS-16_withExtraVisualizers.pdx.zip
+  zip -rq CS-16_withExtraVisualizers.pdx.zip CS-16.pdx
