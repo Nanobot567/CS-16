@@ -58,6 +58,7 @@ function filePicker.update(force)
   end
 
   if filePickList.needsDisplay == true or (filePicker.animator ~= nil and filePicker.animator:ended() == false) or force then
+    gfx.clear()
     filePickList:drawInRect(filePicker.animator:currentValue(), 0, 400, 240)
     fnt8x8:drawTextAligned("choose a " .. ftype, 200, 0, align.center)
   end

@@ -33,7 +33,8 @@ settings = {
   ["logscreens"] = true,
   ["fxvfx"] = false,
   ["crankDockedScreen"] = "pattern",
-  ["foldersPrecedeFiles"] = true
+  ["foldersPrecedeFiles"] = true,
+  ["smallerTempoIncrements"] = false
 }
 settings = loadSettings()
 saveSettings()

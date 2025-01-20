@@ -217,8 +217,10 @@ function settingsScreen.AButtonDown()
       elseif row == 3 then
         settings["stoponsample"] = not settings["stoponsample"]
       elseif row == 4 then
-        settings["stopontempo"] = not settings["stopontempo"]
+        settings["smallerTempoIncrements"] = not settings["smallerTempoIncrements"]
       elseif row == 5 then
+        settings["stopontempo"] = not settings["stopontempo"]
+      elseif row == 6 then
         settings["crankDockedScreen"] = table.cycle(crankDockList, settings["crankDockedScreen"])
       end
     elseif settingsScreen.subMenu == "recording/" then
@@ -324,6 +326,7 @@ function settingsScreen.updateSettings()
       "*Ā*",
       "play on load: " .. tostring(settings["playonload"]),
       "stop if sampling: " .. tostring(settings["stoponsample"]),
+      "precise tempo chg: " .. tostring(settings["smallerTempoIncrements"]),
       "tempo edit stop: " .. tostring(settings["stopontempo"]),
       "crank dock screen: " .. tostring(screen)
     })

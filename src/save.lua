@@ -174,7 +174,7 @@ function loadSave(name)
 
   log.append("setting tempo to " .. tmp[2][1] .. "...")
 
-  seq:setTempo(tmp[2][1] * 8) -- TODO: be sure to implement real world bpm changes once fix is pushed!
+  seq:setTempo(tmp[2][1] * 8)
   sinetimer.duration = 400 - (getTempoFromSPS(seq:getTempo()) / 8)
 
   log.append("setting stepcount...")
