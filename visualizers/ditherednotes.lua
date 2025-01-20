@@ -24,4 +24,4 @@ local function ditheredNotesUpdate(data)
   end
 end
 
-return { "ditherednotes", ditheredNotesUpdate }
+return { "dithered notes", ditheredNotesUpdate }

@@ -78,7 +78,7 @@ function filePicker.update(force)
           songData[3][1],
           "\n\n",
           "tempo: ",
-          songData[2][1] * 8,
+          math.round(getTempoFromSPS(songData[2][1]), 2),
           ", ",
           songData[2][2],
           " steps",

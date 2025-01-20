@@ -207,7 +207,7 @@ function settingsScreen.AButtonDown()
       end
     elseif settingsScreen.subMenu == "ui/visualizer/" then
       if text ~= "----- external -----" then
-        text = string.split(text, ": ")[1]
+        text = pd.string.trimTrailingWhitespace(string.split(text, ":")[1])
 
         settings["visualizer"][text] = not settings["visualizer"][text]
       end

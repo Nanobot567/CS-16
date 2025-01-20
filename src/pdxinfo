@@ -3,5 +3,5 @@ author=nanobot567
 description=cranky synth 16: a 16-track synthesizer/sampler for playdate.
 bundleID=com.nano.cs16
 version=2.0.4
-buildNumber=4714
+buildNumber=4752
 imagePath=SystemAssets/
