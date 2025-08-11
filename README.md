@@ -5,7 +5,7 @@ a synthesizer for playdate
 
 <div style="align: center;"><a href="https://codeberg.org/nanobot567/cs-16/releases/latest"><img src="https://github.com/Nanobot567/tAoHtH/blob/main/readme-graphics/Playdate-badge-download.png"></a></img></div>
 
-## [manual](https://codeberg.org/nanobot567/cs-16/blob/main/MANUAL.md) | [develop](https://codeberg.org/nanobot567/cs-16/blob/main/DEV.md) | [license](https://codeberg.org/nanobot567/cs-16/blob/main/LICENSE)
+## [manual](https://codeberg.org/nanobot567/cs-16/src/branch/main/MANUAL.md) | [develop](https://codeberg.org/nanobot567/cs-16/src/branch/main/DEV.md) | [license](https://codeberg.org/nanobot567/cs-16/src/branch/main/LICENSE)
 
 ## features
 - 16 tracks
