@@ -3,9 +3,9 @@ a synthesizer for playdate
 
 <img src="https://img.shields.io/github/downloads/nanobot567/cs-16/total"><img src="https://img.shields.io/github/v/release/nanobot567/cs-16">
 
-<div style="align: center;"><a href="https://github.com/nanobot567/cs-16/releases/latest"><img src="https://github.com/Nanobot567/tAoHtH/blob/main/readme-graphics/Playdate-badge-download.png"></a></img></div>
+<div style="align: center;"><a href="https://codeberg.org/nanobot567/cs-16/releases/latest"><img src="https://github.com/Nanobot567/tAoHtH/blob/main/readme-graphics/Playdate-badge-download.png"></a></img></div>
 
-## [manual](https://github.com/nanobot567/cs-16/blob/main/MANUAL.md) | [develop](https://github.com/nanobot567/cs-16/blob/main/DEV.md) | [license](https://github.com/nanobot567/cs-16/blob/main/LICENSE)
+## [manual](https://codeberg.org/nanobot567/cs-16/blob/main/MANUAL.md) | [develop](https://codeberg.org/nanobot567/cs-16/blob/main/DEV.md) | [license](https://codeberg.org/nanobot567/cs-16/blob/main/LICENSE)
 
 ## features
 - 16 tracks

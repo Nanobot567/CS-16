@@ -38,7 +38,7 @@ return {"bumper", bumperUpdate}
 ### building and importing
 Currently, there is no way to directly load Lua code from the Playdate's Data/ directory (most likely for security reasons), so you'll have to rebuild CS-16 with your custom visualizers in the source code.
 
-To do this, clone this repository with `git clone https://github.com/nanobot567/CS-16`. Then, navigate to the `src/` directory, and create a new folder named `visualizers` if it doesn't already exist. Here, simply paste your .lua files (or the folder containing your .lua file) and rebuild CS-16 with `pdc src/ CS-16.pdx` (or if you have [`just`](https://github.com/casey/just) installed, `just`).
+To do this, clone this repository with `git clone https://codeberg.org/nanobot567/CS-16`. Then, navigate to the `src/` directory, and create a new folder named `visualizers` if it doesn't already exist. Here, simply paste your .lua files (or the folder containing your .lua file) and rebuild CS-16 with `pdc src/ CS-16.pdx` (or if you have [`just`](https://github.com/casey/just) installed, `just`).
 
 ### visualizer key-value table data
 
